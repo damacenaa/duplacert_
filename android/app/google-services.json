@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620284982229",
+    "project_id": "duplacert",
+    "storage_bucket": "duplacert.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620284982229:android:e1c81aafa3af358f61435c",
+        "android_client_info": {
+          "package_name": "com.example.duplacert"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB115pHZcMqFTmKGhIDU5f40hdc6Xq4pKc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
