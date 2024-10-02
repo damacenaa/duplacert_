@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:duplacert/models/database.dart';
-import 'package:duplacert/pages/Menu/config.dart';
+import 'package:duplacert/pages/Config/config.dart';
 import 'package:flutter/material.dart';
 
-class criarTorneio extends StatefulWidget {
+class visualizarTorneios extends StatefulWidget {
   @override
-  State<criarTorneio> createState() => _CriarTorneio();
+  State<visualizarTorneios> createState() => _VisualizarTorneios();
 }
 
-class _CriarTorneio extends State<criarTorneio> {
+class _VisualizarTorneios extends State<visualizarTorneios> {
   String? imageUrl;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -22,6 +22,7 @@ class _CriarTorneio extends State<criarTorneio> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 100,
         automaticallyImplyLeading: false,
         actions: [
           InkWell(
@@ -34,19 +35,19 @@ class _CriarTorneio extends State<criarTorneio> {
               );
             },
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(15),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(75),
                 child: imageUrl != null
                     ? Image.network(
                         imageUrl!,
                         fit: BoxFit.cover,
-                        width: 43,
-                        height: 43,
+                        width: 55,
+                        height: 55,
                       )
                     : const Icon(
                         Icons.account_circle,
-                        size: 43,
+                        size: 55,
                       ),
               ),
             ),
@@ -55,7 +56,7 @@ class _CriarTorneio extends State<criarTorneio> {
         ],
       ),
       body: Center(
-        child: Text('Events Screen'),
+        child: Text('Tela de visualizar meus torneios'),
       ),
     );
   }

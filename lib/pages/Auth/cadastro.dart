@@ -73,7 +73,7 @@ class _Cadastro extends State<Cadastro> {
                             )),
                             labelText: 'Nome completo',
                             labelStyle: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20)),
+                                fontWeight: FontWeight.bold, fontSize: 15)),
                       ),
                       TextFormField(
                         controller: emailController,
@@ -86,7 +86,7 @@ class _Cadastro extends State<Cadastro> {
                           )),
                           labelText: 'Email',
                           labelStyle: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20),
+                              fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         validator: (value) => value == null || value.isEmpty
                             ? 'Preencha o campo de email!'
@@ -105,7 +105,7 @@ class _Cadastro extends State<Cadastro> {
                           )),
                           labelText: 'Criar senha',
                           labelStyle: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20),
+                              fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -128,7 +128,7 @@ class _Cadastro extends State<Cadastro> {
                           )),
                           labelText: 'Confirmar senha',
                           labelStyle: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 20),
+                              fontWeight: FontWeight.bold, fontSize: 15),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -177,8 +177,9 @@ class _Cadastro extends State<Cadastro> {
                         hint: const Text(
                           'Selecione seu gênero',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 15,
                             color: Colors.grey,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         items: genderItems
@@ -188,7 +189,7 @@ class _Cadastro extends State<Cadastro> {
                                     item,
                                     style: const TextStyle(
                                       color: Color.fromARGB(255, 53, 52, 52),
-                                      fontSize: 20,
+                                      fontSize: 15,
                                     ),
                                   ),
                                 ))
@@ -233,7 +234,7 @@ class _Cadastro extends State<Cadastro> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 18,
-                              color: Color.fromARGB(255, 90, 87, 87),
+                              color: Color.fromARGB(255, 49, 48, 48),
                               fontWeight: FontWeight.bold),
                         ),
                         onPressed: () {

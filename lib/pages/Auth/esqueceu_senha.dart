@@ -11,7 +11,11 @@ class esqueceu_senha extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Troca de senha',
-          style: TextStyle(fontSize: 25, fontFamily: 'inter'),
+          style: TextStyle(
+            fontSize: 22,
+            fontFamily: 'inter',
+            fontWeight: FontWeight.bold,
+          ),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -49,7 +53,7 @@ class esqueceu_senha extends StatelessWidget {
                         height: 20,
                       ),
                       const Text(
-                        "Esqueceu sua senha?",
+                        "Alteração de senha",
                         style: TextStyle(
                           color: Color.fromARGB(255, 90, 87, 87),
                           fontSize: 32,

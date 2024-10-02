@@ -1,4 +1,4 @@
-import 'package:duplacert/pages/Menu/config.dart';
+import 'package:duplacert/pages/Config/config.dart';
 import 'package:duplacert/pages/Menu/menuPrincipal.dart';
 import 'package:duplacert/pages/Auth/cadastro.dart';
 import 'package:duplacert/pages/Auth/esqueceu_senha.dart';
@@ -29,9 +29,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       theme: ThemeData(
-        textSelectionTheme:
-            TextSelectionThemeData(cursorColor: Colors.blueAccent),
-        primaryColor: Colors.yellowAccent,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(
+              255, 110, 110, 110), // Define a cor de destaque
+          primary: Color.fromARGB(227, 236, 161, 20), // Cor principal
+          secondary: const Color.fromARGB(255, 110, 110, 110),
+        ),
         snackBarTheme: SnackBarThemeData(
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

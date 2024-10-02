@@ -13,6 +13,7 @@ class Authent {
       'nome': nome,
       'email': email,
       'genero': genero,
+      'categoria': 'Iniciante'
     };
 
     if (userCredential != null) {
