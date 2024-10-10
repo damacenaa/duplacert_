@@ -22,7 +22,7 @@ class Torneios {
         final cidade = document['cidade'];
         final estado = document['estado'];
         final participantes = document['participantes'];
-        final dtaCriacao = document['criadoEm'];
+        final dataTorneio = document['dataTorneio'];
 
         torneioList.add(Torneio(
             idTorneio: idTorneio,
@@ -31,7 +31,7 @@ class Torneios {
             cidade: cidade,
             estado: estado,
             numParticipantes: participantes,
-            dtaCriacao: dtaCriacao));
+            dataTorneio: dataTorneio));
       }
     } catch (e) {
       print('Erro ao buscar os serviços: $e');

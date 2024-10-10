@@ -7,6 +7,7 @@ import 'package:duplacert/pages/Auth/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,10 @@ class MyApp extends StatelessWidget {
         'config': (context) => const Config(),
       },
       home: LoadingScreen(),
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: [
+        const Locale('pt', 'BR'), // Português do Brasil
+      ],
     );
   }
 }

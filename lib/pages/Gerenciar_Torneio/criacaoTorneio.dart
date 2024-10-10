@@ -1,27 +1,30 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/gerenciarTorneios.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CriarTorneio extends StatefulWidget {
   @override
-  State<CriarTorneio> createState() => _CriarTorneio();
+  State<CriarTorneio> createState() => _CriarTorneioState();
 }
 
-class _CriarTorneio extends State<CriarTorneio> {
+class _CriarTorneioState extends State<CriarTorneio> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final _formKey = GlobalKey<FormState>(); // Chave para o formulário
+  final _formKey = GlobalKey<FormState>();
   TextEditingController nomeTorneio = TextEditingController();
   TextEditingController numeroParticipantes = TextEditingController();
+  TextEditingController dataController = TextEditingController();
   String? estadoSelecionado;
   String? cidadeSelecionada;
   String? categoriaSelecionada = 'Masculino';
   List<String> estados = [];
   List<String> cidades = [];
   bool carregamentoCidades = false;
+  DateTime? dataSelecionada;
   final FirebaseAuth auth = FirebaseAuth.instance;
 
   @override
@@ -51,13 +54,11 @@ class _CriarTorneio extends State<CriarTorneio> {
             ),
           ),
         ),
-        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(30),
         child: Form(
-          // Aqui envolvemos os campos no Form
-          key: _formKey, // Associa o _formKey
+          key: _formKey,
           child: Column(
             children: [
               TextFormField(
@@ -77,54 +78,29 @@ class _CriarTorneio extends State<CriarTorneio> {
                     carregarCidades(newValue!);
                   });
                 },
-                items: [
-                  DropdownMenuItem<String>(
-                    value: null,
-                    child: Text(
-                      'Selecione seu Estado',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  ...estados.map<DropdownMenuItem<String>>((String uf) {
-                    return DropdownMenuItem<String>(
-                      value: uf,
-                      child: Text(uf),
-                    );
-                  }).toList(),
-                ],
+                items: estados.map<DropdownMenuItem<String>>((String uf) {
+                  return DropdownMenuItem<String>(
+                    value: uf,
+                    child: Text(uf),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField2<String>(
                 isExpanded: true,
                 value: cidadeSelecionada,
                 hint: const Text('Selecione uma cidade'),
-                iconStyleData: const IconStyleData(
-                  iconSize: 24,
-                ),
                 onChanged: (newValue) {
                   setState(() {
-                    cidadeSelecionada = newValue!;
+                    cidadeSelecionada = newValue;
                   });
                 },
-                items: <DropdownMenuItem<String>>[
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text('Selecione uma cidade',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 17,
-                        )),
-                  ),
-                  ...cidades.map<DropdownMenuItem<String>>((String city) {
-                    return DropdownMenuItem<String>(
-                      value: city,
-                      child: Text(
-                        city,
-                        style: const TextStyle(fontSize: 17),
-                      ),
-                    );
-                  }).toList(),
-                ],
+                items: cidades.map<DropdownMenuItem<String>>((String city) {
+                  return DropdownMenuItem<String>(
+                    value: city,
+                    child: Text(city),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 20),
               TextFormField(
@@ -132,6 +108,10 @@ class _CriarTorneio extends State<CriarTorneio> {
                 decoration:
                     const InputDecoration(labelText: 'Número de Participantes'),
                 keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter
+                      .digitsOnly, // Aceitar apenas números
+                ],
                 validator: (value) =>
                     value!.isEmpty || int.tryParse(value) == null
                         ? 'Digite um número válido'
@@ -140,18 +120,12 @@ class _CriarTorneio extends State<CriarTorneio> {
               DropdownButtonFormField<String>(
                 value: categoriaSelecionada,
                 hint: const Text('Selecione a categoria'),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text('Selecione a categoria'),
-                  ),
-                  ...['Masculino', 'Feminino', 'Misto'].map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
-                ],
+                items: ['Masculino', 'Feminino', 'Misto'].map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     categoriaSelecionada = value;
@@ -159,11 +133,18 @@ class _CriarTorneio extends State<CriarTorneio> {
                 },
                 decoration: const InputDecoration(labelText: 'Categoria'),
               ),
+              TextFormField(
+                controller: dataController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Selecione uma data',
+                ),
+                onTap: () => _selecionarData(context),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
-                    // Valida o formulário aqui
                     bool confirmed = await showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -221,7 +202,6 @@ class _CriarTorneio extends State<CriarTorneio> {
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       if (mounted) {
-        // Verificação para evitar setState após desmontagem
         setState(() {
           estados = data.map((uf) => uf['sigla']).cast<String>().toList();
         });
@@ -231,7 +211,6 @@ class _CriarTorneio extends State<CriarTorneio> {
     }
   }
 
-  // Carregar a lista de cidades de uma UF específica
   Future<void> carregarCidades(String uf) async {
     final response = await http.get(
       Uri.parse(
@@ -241,7 +220,6 @@ class _CriarTorneio extends State<CriarTorneio> {
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       if (mounted) {
-        // Verificação para evitar setState após desmontagem
         setState(() {
           cidades = data.map((city) => city['nome']).cast<String>().toList();
         });
@@ -251,58 +229,53 @@ class _CriarTorneio extends State<CriarTorneio> {
     }
   }
 
-  @override
-  void dispose() {
-    nomeTorneio.dispose();
-    numeroParticipantes.dispose();
-    super.dispose();
-  }
-
   Future<void> criarTorneio() async {
-    print("Nome do torneio: ${nomeTorneio.text}");
-    print("Categoria: $categoriaSelecionada");
-    print("Cidade: $cidadeSelecionada");
-    print("Estado: $estadoSelecionado");
-    print("Numero de participantes: ${numeroParticipantes.text}");
-
-    // Verificações manuais
-    if (estadoSelecionado == null) {
-      print("Erro: Estado não selecionado");
-      return;
-    }
-
-    if (cidadeSelecionada == null) {
-      print("Erro: Cidade não selecionada");
-      return;
-    }
-
-    if (categoriaSelecionada == null) {
-      print("Erro: Categoria não selecionada");
-      return;
-    }
-
-    int? numParticipantes = int.tryParse(numeroParticipantes.text);
-    if (numParticipantes == null) {
-      print("Erro: Número de participantes inválido");
-      return;
-    }
     if (_formKey.currentState!.validate()) {
       User? usuario = auth.currentUser;
       if (usuario != null) {
-        await FirebaseFirestore.instance.collection('torneios').add({
-          'nome': nomeTorneio.text, // Aqui deve-se usar .text
+        await _firestore.collection('torneios').add({
+          'nome': nomeTorneio.text,
           'estado': estadoSelecionado,
           'cidade': cidadeSelecionada,
-          'participantes': numParticipantes, // Verificar se o número é válido
+          'participantes': int.tryParse(numeroParticipantes.text),
           'categoria': categoriaSelecionada,
-          'administrador':
-              usuario.uid, // Verifique se o usuário está autenticado
-          'criadoEm': Timestamp.now(),
+          'administrador': usuario.uid,
+          'dataTorneio': dataSelecionada,
         });
         Navigator.pop(context);
       } else {
         print("Erro: Usuário não autenticado");
       }
     }
+  }
+
+  Future<void> _selecionarData(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+      locale: const Locale('pt', 'BR'),
+    );
+
+    if (pickedDate != null && pickedDate != dataSelecionada) {
+      // Aqui estamos criando uma nova data sem horário
+      DateTime dataSemHorario =
+          DateTime(pickedDate.year, pickedDate.month, pickedDate.day);
+
+      setState(() {
+        dataSelecionada = dataSemHorario; // Atribuímos a data sem horário
+        dataController.text =
+            "${dataSemHorario.day}/${dataSemHorario.month}/${dataSemHorario.year}"; // Formatação da data
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    nomeTorneio.dispose();
+    numeroParticipantes.dispose();
+    dataController.dispose();
+    super.dispose();
   }
 }

@@ -50,20 +50,9 @@ class _Config extends State<Config> {
         title: const Text(
           'Configurações',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 25,
             fontFamily: 'inter',
-            fontWeight: FontWeight.bold,
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            size: 35,
-            color: Color.fromARGB(255, 41, 39, 39),
-          ), // Ícone de voltar
-          onPressed: () {
-            Navigator.pop(context); // Ação para voltar à tela anterior
-          },
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(

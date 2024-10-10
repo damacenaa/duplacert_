@@ -48,7 +48,7 @@ class _Telaedicao extends State<telaEdicao> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               TextFormField(
                 controller: _nomeController,

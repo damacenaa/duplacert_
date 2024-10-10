@@ -1,6 +1,6 @@
 import 'package:duplacert/pages/Visualizar_Torneios/visualizarTorneios.dart';
 import 'package:duplacert/pages/Buscar/buscarTorneio.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/gerenciarTorneios.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
 import 'package:duplacert/pages/Config/config.dart';
 import 'package:flashy_tab_bar2/flashy_tab_bar2.dart';
 import 'package:flutter/material.dart';
