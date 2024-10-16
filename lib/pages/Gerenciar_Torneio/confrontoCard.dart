@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class Torneio {
+class Confronto {
   final String nome;
   final String categoria;
   final String cidade;
@@ -12,7 +12,7 @@ class Torneio {
   final int numParticipantes;
   final String idTorneio;
 
-  Torneio(
+  Confronto(
       {required this.nome,
       required this.categoria,
       required this.cidade,
@@ -22,7 +22,7 @@ class Torneio {
       required this.idTorneio});
 }
 
-class Torneiocard extends StatelessWidget {
+class ConfrontoCard extends StatelessWidget {
   final String nome;
   final String categoria;
   final String cidade;
@@ -33,7 +33,7 @@ class Torneiocard extends StatelessWidget {
   final VoidCallback onEdit;
   final String idTorneio;
 
-  Torneiocard({
+  ConfrontoCard({
     required this.nome,
     required this.categoria,
     required this.onDelete,

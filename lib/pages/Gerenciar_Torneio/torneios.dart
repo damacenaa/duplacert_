@@ -1,6 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:duplacert/models/database.dart';
-import 'package:duplacert/models/torneio.dart';
+import 'package:duplacert/models/torneio_model.dart';
 import 'package:duplacert/pages/Config/config.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/criacaoTorneio.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/modificarTorneio.dart';
@@ -36,17 +36,10 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
         preferredSize: Size.fromHeight(60),
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromARGB(249, 255, 239, 9),
-                Color.fromARGB(227, 236, 161, 20),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3), // Cor da sombra
+                color: const Color.fromARGB(255, 0, 0, 0)
+                    .withOpacity(0.1), // Cor da sombra
                 spreadRadius: 2, // O quão grande a sombra será
                 blurRadius: 10, // O quão desfocada será a sombra
                 offset: const Offset(
@@ -151,10 +144,12 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
                   },
                   onEdit: () async {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                ModificarTorneio(torneios[index].id)));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ModificarTorneio(
+                            idTorneio: torneios[index].idTorneio),
+                      ),
+                    );
                   },
                 );
               },
@@ -162,21 +157,23 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
             const SizedBox(
               height: 10,
             ),
-            IconButton(
-              iconSize: 60,
-              icon: Icon(Icons.add_circle),
-              color: Color.fromARGB(75, 6, 6, 6),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CriarTorneio(),
-                  ),
-                );
-              },
-            ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return CriarTorneio();
+            },
+          );
+        },
+        backgroundColor:
+            Color.fromARGB(235, 236, 160, 20), // Cor de fundo do botão
+        foregroundColor: const Color.fromARGB(
+            255, 5, 5, 5), // Cor do ícone (dentro do botão)
+        child: const Icon(Icons.add),
       ),
     );
   }

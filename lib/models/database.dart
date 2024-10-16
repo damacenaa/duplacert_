@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -59,5 +60,17 @@ class DatabaseMethods {
       print('Nenhuma imagem encontrada no Firebase Storage.');
       return null; // Retorna null se nenhuma imagem for encontrada.
     }
+  }
+
+  String gerarCodigo(int comprimento) {
+    const _chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    Random _rnd = Random();
+
+    return String.fromCharCodes(
+      Iterable.generate(
+        comprimento,
+        (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length)),
+      ),
+    );
   }
 }

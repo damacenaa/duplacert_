@@ -193,7 +193,7 @@ class login extends StatelessWidget {
   Future<void> _loginUser(email, senha, context) async {
     //Navigator.pushReplacementNamed(context, 'menuPrincipal');
     try {
-      await Authent().loginwithEmailAndPassword(email, senha).then((value) {});
+      await Authent().loginSenhaEmail(email, senha).then((value) {});
       Navigator.pushReplacementNamed(context, 'menu principal');
     } on FirebaseException catch (e) {
       var msg = '';

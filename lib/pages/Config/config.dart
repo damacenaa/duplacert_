@@ -55,15 +55,25 @@ class _Config extends State<Config> {
           ),
         ),
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
               colors: [
                 Color.fromARGB(249, 255, 239, 9),
                 Color.fromARGB(227, 236, 161, 20),
-              ], // Escolha as cores desejadas para o gradiente
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color.fromARGB(255, 0, 0, 0)
+                    .withOpacity(0.1), // Cor da sombra
+                spreadRadius: 2, // O quão grande a sombra será
+                blurRadius: 10, // O quão desfocada será a sombra
+                offset: const Offset(
+                    0, 5), // Posição da sombra (0,5) para projetar para baixo
+              ),
+            ],
           ),
         ),
       ),

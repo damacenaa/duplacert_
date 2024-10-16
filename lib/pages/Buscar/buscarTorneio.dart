@@ -1,16 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:duplacert/models/database.dart';
+import 'package:duplacert/pages/Buscar/entrarTorneio.dart';
 import 'package:duplacert/pages/Config/config.dart';
 import 'package:flutter/material.dart';
 
 class buscarTorneio extends StatefulWidget {
   @override
-  State<buscarTorneio> createState() => _BuscarTorneio();
+  State<buscarTorneio> createState() => _BuscarTorneioState();
 }
 
-class _BuscarTorneio extends State<buscarTorneio> {
+class _BuscarTorneioState extends State<buscarTorneio> {
   String? imageUrl;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final TextEditingController codigoTorneio = TextEditingController();
 
   @override
   void initState() {
@@ -25,21 +27,12 @@ class _BuscarTorneio extends State<buscarTorneio> {
         preferredSize: Size.fromHeight(60),
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromARGB(249, 255, 239, 9),
-                Color.fromARGB(227, 236, 161, 20),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3), // Cor da sombra
-                spreadRadius: 2, // O quão grande a sombra será
-                blurRadius: 10, // O quão desfocada será a sombra
-                offset: const Offset(
-                    0, 5), // Posição da sombra (0,5) para projetar para baixo
+                color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
@@ -62,7 +55,7 @@ class _BuscarTorneio extends State<buscarTorneio> {
               alignment: Alignment.center,
               children: [
                 const Align(
-                  alignment: Alignment.center, // Centraliza o texto
+                  alignment: Alignment.center,
                   child: Text(
                     'Buscar Torneios',
                     style: TextStyle(
@@ -72,7 +65,7 @@ class _BuscarTorneio extends State<buscarTorneio> {
                   ),
                 ),
                 Align(
-                  alignment: Alignment.centerRight, // Alinha a imagem à direita
+                  alignment: Alignment.centerRight,
                   child: InkWell(
                     onTap: () {
                       Navigator.push(
@@ -106,8 +99,70 @@ class _BuscarTorneio extends State<buscarTorneio> {
           ),
         ),
       ),
-      body: Center(
-        child: Text('Tela Buscar'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(
+          left: 15,
+          right: 15,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 50),
+            Center(
+              child: Text(
+                "Insira o código do torneio para entrar",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: Container(
+                width: 200,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: codigoTorneio,
+                      decoration: const InputDecoration(
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Color.fromARGB(255, 90, 87, 87),
+                            width: 2,
+                          ),
+                        ),
+                        labelText: 'Código do Torneio',
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        child: const Text(
+                          "Buscar",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color.fromARGB(226, 236, 55, 45),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          buscarTorneioPorCodigo(
+                              codigoTorneio.text, _firestore, context);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

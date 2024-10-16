@@ -270,7 +270,7 @@ class _Cadastro extends State<Cadastro> {
                               onPressed: () async {
                                 try {
                                   await Authent()
-                                      .createUserwithEmailAndPassword(
+                                      .criarUsuario(
                                           nomeController.text,
                                           emailController.text,
                                           senhaController.text,

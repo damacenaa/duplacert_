@@ -25,17 +25,10 @@ class _VisualizarTorneios extends State<visualizarTorneios> {
         preferredSize: Size.fromHeight(60),
         child: Container(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color.fromARGB(249, 255, 239, 9),
-                Color.fromARGB(227, 236, 161, 20),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3), // Cor da sombra
+                color: const Color.fromARGB(255, 0, 0, 0)
+                    .withOpacity(0.1), // Cor da sombra
                 spreadRadius: 2, // O quão grande a sombra será
                 blurRadius: 10, // O quão desfocada será a sombra
                 offset: const Offset(
