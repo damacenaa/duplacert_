@@ -1,3 +1,5 @@
+import 'package:duplacert/models/torneio_model.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/chaveamento.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,11 +22,15 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
   int numeroMaximoParticipantes = 0;
   int participantesAtuais = 0;
   List<String> participantes = [];
+  Map<String, String> nomesDuplas = {};
+  bool sorteioValidacao = false;
+  final Torneios torneios = Torneios();
 
   @override
   void initState() {
     super.initState();
     _carregarDadosTorneio();
+    habilitarSorteio();
   }
 
   @override
@@ -60,7 +66,7 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -104,28 +110,107 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
             SizedBox(height: 20),
 
             // Lista de participantes
-            Text(
+            const Text(
               'Participantes inscritos:',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 15),
             Expanded(
               child: ListView.builder(
                 itemCount: participantes.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text(
-                          participantes[index][0]), // Letra inicial do nome
-                    ),
-                    title: Text(participantes[index]),
+                  String idDupla = participantes[index];
+                  String nomeDaDupla = nomesDuplas[idDupla] ?? 'Carregando...';
+
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            nomeDaDupla,
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
+              ),
+            ),
+            ElevatedButton(
+              onPressed: sorteioValidacao
+                  ? () async {
+                      DocumentSnapshot torneioSnapshot = await FirebaseFirestore
+                          .instance
+                          .collection('torneios')
+                          .doc(widget.idTorneio)
+                          .get();
+
+                      if (torneioSnapshot.exists) {
+                        String status = torneioSnapshot['status'];
+
+                        if (status == 'Inscrições') {
+                          await torneios
+                              .realizarSorteioChaveamento(widget.idTorneio);
+                        }
+
+                        // Navegue para ChaveamentoPage com a mesma instância de torneios
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChaveamentoPage(
+                              torneioId: widget.idTorneio,
+                            ),
+                          ),
+                        );
+                      } else {
+                        print("Torneio não encontrado.");
+                      }
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.black,
+                backgroundColor: sorteioValidacao
+                    ? Colors.amber
+                    : Colors.grey, // Cor do botão
+                minimumSize: Size(double.infinity, 50), // Tamanho do botão
+              ),
+              child: Text(
+                sorteioValidacao
+                    ? 'Realizar Sorteio'
+                    : 'Participantes insuficientes',
+                style: TextStyle(fontSize: 18),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void habilitarSorteio() {
+    setState(() {
+      if (participantesAtuais == numeroMaximoParticipantes) {
+        sorteioValidacao = true;
+      } else
+        sorteioValidacao = false;
+    });
   }
 
   Future<void> _carregarDadosTorneio() async {
@@ -148,11 +233,22 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
           // Se 'duplas' existe, obtenha o número de participantes
           participantesAtuais = (dadosTorneio['duplas'] as List).length;
           participantes = List<String>.from(dadosTorneio['duplas']);
+          buscarNomes(participantes);
         } else {
           // Se 'duplas' não existe, inicialize os valores adequadamente
           participantesAtuais = 0;
           participantes = [];
         }
+      });
+    }
+  }
+
+  Future<void> buscarNomes(List<String> idsDuplas) async {
+    for (String idDupla in idsDuplas) {
+      Torneios().getDupla(idDupla, (nome1, nome2) {
+        setState(() {
+          nomesDuplas[idDupla] = '$nome1\n$nome2';
+        });
       });
     }
   }

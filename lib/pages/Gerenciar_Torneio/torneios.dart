@@ -21,6 +21,7 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String userId = FirebaseAuth.instance.currentUser!.uid;
   List<Torneio> torneios = [];
+  bool sorteioValidacao = false;
 
   @override
   void initState() {

@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/chaveamento.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/torneioCard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class Torneios {
   final FirebaseAuth auth = FirebaseAuth.instance;
   String idUser = FirebaseAuth.instance.currentUser!.uid;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<List<Torneio>> getTorneio(String userId) async {
     List<Torneio> torneioList = [];
@@ -39,5 +44,110 @@ class Torneios {
     }
 
     return torneioList;
+  }
+
+  Future<void> getDupla(
+      String idDupla, Function(String, String) nomesObtidos) async {
+    try {
+      DocumentSnapshot duplaSnapshot = await FirebaseFirestore.instance
+          .collection('duplas')
+          .doc(idDupla)
+          .get();
+
+      if (duplaSnapshot.exists) {
+        String idParticipante1 = duplaSnapshot['idParticipante1'];
+        String idParticipante2 = duplaSnapshot['idParticipante2'];
+
+        DocumentSnapshot participante1Snapshot = await FirebaseFirestore
+            .instance
+            .collection('user')
+            .doc(idParticipante1)
+            .get();
+
+        DocumentSnapshot participante2Snapshot = await FirebaseFirestore
+            .instance
+            .collection('user')
+            .doc(idParticipante2)
+            .get();
+
+        if (participante1Snapshot.exists && participante2Snapshot.exists) {
+          String nomeParticipante1 = participante1Snapshot['nome'];
+          String nomeParticipante2 = participante2Snapshot['nome'];
+
+          // Passa os nomes para o callback
+          nomesObtidos(nomeParticipante1, nomeParticipante2);
+        } else {
+          print('Participante(s) não encontrado(s).');
+        }
+      } else {
+        print('Dupla não encontrada.');
+      }
+    } catch (e) {
+      print('Erro ao buscar nomes dos participantes: $e');
+    }
+  }
+
+  Future<void> realizarSorteioChaveamento(String torneioId) async {
+    await FirebaseFirestore.instance
+        .collection('torneios')
+        .doc(torneioId)
+        .update({
+      'status': 'Em andamento',
+    });
+
+    final torneioRef =
+        FirebaseFirestore.instance.collection('torneios').doc(torneioId);
+    final torneioSnapshot = await torneioRef.get();
+
+    // Obtenha o array de IDs de duplas do torneio
+    List<dynamic> duplasIds = torneioSnapshot.data()!['duplas'];
+    duplasIds.shuffle(); // Embaralha para randomizar o sorteio
+
+    final chaveamentoRef =
+        FirebaseFirestore.instance.collection('chaveamento').doc(torneioId);
+
+    // Calcula o número total de rodadas com base no número de duplas
+    int totalFases = (duplasIds.length).bitLength - 1;
+
+    // Função para criar uma fase e suas partidas
+    Future<void> criarFase(int fase, List<dynamic> duplas,
+        [int? proximaFase]) async {
+      final faseRef = chaveamentoRef.collection('fase$fase');
+
+      for (int i = 0; i < duplas.length; i += 2) {
+        var dupla1 = duplas[i];
+        var dupla2 = (i + 1 < duplas.length) ? duplas[i + 1] : null;
+
+        // Cria a partida com duplas e resultado nulo
+        await faseRef.add({
+          'dupla1': dupla1,
+          'dupla2': dupla2,
+          'resultado': null,
+          'fase': fase,
+        });
+      }
+    }
+
+    // Criação das fases dinamicamente
+    List<dynamic> duplasAtuais = duplasIds;
+    for (int fase = 1; fase <= totalFases; fase++) {
+      int? proximaFase = (fase < totalFases) ? fase + 1 : null;
+      await criarFase(fase, duplasAtuais, proximaFase);
+
+      // Reduz o número de duplas pela metade para a próxima fase
+      duplasAtuais = List.generate(
+        duplasAtuais.length ~/ 2,
+        (index) => 'vencedor_fase${fase}_$index',
+      );
+    }
+
+    // Definir as informações gerais do chaveamento
+    await chaveamentoRef.set({
+      'idTorneio': torneioId,
+      'numduplas': duplasIds.length,
+      'totalFases': totalFases, // Número de fases dinâmico
+    });
+
+    print("Chaveamento criado com sucesso!");
   }
 }
