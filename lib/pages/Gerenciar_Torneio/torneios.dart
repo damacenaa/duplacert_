@@ -118,12 +118,25 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
         ),
         child: Column(
           children: [
-            Container(
-              alignment: Alignment.topCenter,
-              padding: const EdgeInsets.only(
-                top: 30,
+            if (torneios.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 250.0),
+                child: Text(
+                  "Não há torneios criados, crie um, clicando no botão no canto inferior direito!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(255, 29, 29, 29),
+                      fontWeight: FontWeight.w300),
+                ),
+              )
+            else
+              Container(
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(
+                  top: 30,
+                ),
               ),
-            ),
             const SizedBox(
               height: 20,
             ),
@@ -162,13 +175,16 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
+        onPressed: () async {
+          bool? atualizar = await showModalBottomSheet(
             context: context,
             builder: (context) {
               return CriarTorneio();
             },
           );
+          if (atualizar == true) {
+            carregarTorneios();
+          }
         },
         backgroundColor:
             Color.fromARGB(235, 236, 160, 20), // Cor de fundo do botão
@@ -181,30 +197,39 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
 
   Future<void> deleteTorneio(String idTorneio) async {
     try {
-      // Primeiro, você pode buscar o documento na coleção 'perfil' com base no campo 'idServico'
-      QuerySnapshot perfilQuery = await FirebaseFirestore.instance
-          .collection('torneios')
-          .where('idTorneio', isEqualTo: idTorneio)
-          .get();
+      await excluirSubcolecoes(idTorneio);
+      await excluirDuplas(idTorneio);
 
-      if (perfilQuery.docs.isNotEmpty) {
-        // Se houver documentos correspondentes na coleção 'perfil', exclua-os
-        for (QueryDocumentSnapshot doc in perfilQuery.docs) {
-          await FirebaseFirestore.instance
-              .collection('perfis')
-              .doc(doc.id)
-              .delete();
-        }
-      }
-
-      // Em seguida, você pode excluir o documento na coleção 'servicos'
       await FirebaseFirestore.instance
           .collection('torneios')
           .doc(idTorneio)
           .delete();
+
       await carregarTorneios();
     } catch (e) {
       print('Erro ao excluir o serviço: $e');
+    }
+  }
+
+  Future<void> excluirSubcolecoes(String docId) async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('chaveamento')
+        .where('idTorneio', isEqualTo: docId)
+        .get();
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+  }
+
+  Future<void> excluirDuplas(String idTorneio) async {
+    // Consulta os documentos com o campo 'idTorneio' igual ao parâmetro idTorneio
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('duplas')
+        .where('idTorneio', isEqualTo: idTorneio)
+        .get();
+    // Exclui cada documento encontrado
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
     }
   }
 

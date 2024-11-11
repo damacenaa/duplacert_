@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:duplacert/models/torneio_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 class ChaveamentoPage extends StatefulWidget {
   final String torneioId;
@@ -16,10 +16,10 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int faseAtual = 1;
   int totalFases = 1;
-  Map<String, String> nomesDuplas = {};
+  Map<String, List<String>> nomesDuplas = {};
   Map<String, String?> resultadosPartidas = {};
   bool carregandoNomes = true;
-  Color corCheckbox = Colors.blue;
+  Map<String, dynamic>? dadosTorneio; //Mapa para acesso aos dados do torneio
 
   @override
   void initState() {
@@ -28,37 +28,7 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     _carregarDadosDaFase();
   }
 
-  void proximaFase() {
-    if (faseAtual < totalFases) {
-      setState(() {
-        faseAtual++;
-        nomesDuplas.clear();
-      });
-      resultadosPartidas = {};
-      _carregarDadosDaFase();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Já estamos na última fase!')),
-      );
-    }
-  }
-
-  void faseAnterior() {
-    if (faseAtual > 1) {
-      setState(() {
-        faseAtual--;
-        nomesDuplas.clear();
-      });
-      resultadosPartidas = {};
-      _carregarDadosDaFase();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Já estamos na primeira fase!')),
-      );
-    }
-  }
-
-  @override
+  @override //Build principál
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -68,62 +38,152 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           IconButton(icon: Icon(Icons.arrow_forward), onPressed: proximaFase),
         ],
       ),
-      body: carregandoNomes
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: buildChaveamentoLayout(),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('torneios')
+            .doc(widget.torneioId)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData) {
+            final data = snapshot.data!.data() as Map<String, dynamic>;
+            final isFinalizado = data['status'] == 'finalizado';
+
+            // Verifica o status e exibe o widget correspondente
+            return isFinalizado ? telaResultadoFinal() : buildMainContent();
+          } else {
+            return Center(child: Text("Erro ao carregar dados do torneio"));
+          }
+        },
+      ),
+    );
+  }
+
+  Widget buildMainContent() {
+    return Column(
+      children: [
+        Expanded(child: buildChaveamentoLayout()),
+        FutureBuilder<bool>(
+          future: verificarResultados(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data == true) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: enviarResultados,
+                  child: Text('Enviar resultados'),
                 ),
-                FutureBuilder<bool>(
-                  future: verificarResultados(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData && snapshot.data == true) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ElevatedButton(
-                          onPressed: enviarResultados,
-                          child: Text('Enviar resultados'),
-                        ),
-                      );
-                    }
-                    return SizedBox();
-                  },
-                ),
-              ],
+              );
+            }
+            return SizedBox();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget telaResultadoFinal() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Campeões',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
+            FutureBuilder<DocumentSnapshot>(
+              future: buscarDadosTorneio(
+                  widget.torneioId), // Função que busca os dados do torneio
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Erro ao carregar os dados do torneio.');
+                } else if (!snapshot.hasData || snapshot.data == null) {
+                  return Text('Torneio não encontrado.');
+                }
+
+                // Dados foram carregados e estão disponíveis
+                var dadosTorneio =
+                    snapshot.data!.data() as Map<String, dynamic>;
+
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Nome: ${dadosTorneio['nome']}',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "Jogador2",
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    // Adicione outras informações que deseja exibir
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget buildChaveamentoLayout() {
+    //Widget chaveamento
     return ListView.builder(
       itemCount: resultadosPartidas.keys.length,
       itemBuilder: (context, index) {
         String partidaId = resultadosPartidas.keys.elementAt(index);
-        String dupla1Id = nomesDuplas.keys.elementAt(index * 2);
-        String dupla2Id = nomesDuplas.keys.elementAt(index * 2 + 1);
+        String dupla1Id;
+        String dupla2Id;
 
-        String dupla1 =
-            nomesDuplas[dupla1Id] ?? 'Vencedor fase $faseAtual-1...';
-        String dupla2 =
-            nomesDuplas[dupla2Id] ?? 'Vencedor fase $faseAtual-1...';
+// Verificar se o índice está dentro do intervalo
+        if (index * 2 < nomesDuplas.keys.length) {
+          dupla1Id = nomesDuplas.keys.elementAt(index * 2);
+        } else {
+          dupla1Id = 'teste'; // Valor fallback se o índice for inválido
+        }
 
+        if (index * 2 + 1 < nomesDuplas.keys.length) {
+          dupla2Id = nomesDuplas.keys.elementAt(index * 2 + 1);
+        } else {
+          dupla2Id = 'teste'; // Valor fallback se o índice for inválido
+        }
+
+// Extrair os nomes das duplas com fallback
+        String primeiroNomeDupla1 = nomesDuplas[dupla1Id]?[0] ?? 'Vencedores';
+        String segundoNomeDupla1 =
+            nomesDuplas[dupla1Id]?[1] ?? 'Fase ${faseAtual - 1}';
+
+        String primeiroNomeDupla2 = nomesDuplas[dupla2Id]?[0] ?? 'Vencedores';
+        String segundoNomeDupla2 =
+            nomesDuplas[dupla2Id]?[1] ?? 'Fase ${faseAtual - 1}';
         return Card(
           color: Colors.amber,
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           child: Padding(
             padding: EdgeInsets.all(10),
             child: Row(
               children: [
                 Expanded(
-                    child: buildDuplaWidget(dupla1, partidaId, dupla1Id, true)),
+                    child: buildDuplaWidget(primeiroNomeDupla1,
+                        segundoNomeDupla1, partidaId, dupla1Id)),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text('X', style: TextStyle(fontSize: 18)),
                 ),
                 Expanded(
-                    child:
-                        buildDuplaWidget(dupla2, partidaId, dupla2Id, false)),
+                    child: buildDuplaWidget(primeiroNomeDupla2,
+                        segundoNomeDupla2, partidaId, dupla2Id)),
               ],
             ),
           ),
@@ -132,68 +192,158 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     );
   }
 
-  Widget buildDuplaWidget(
-      String dupla, String partidaId, String duplaId, bool isDupla1) {
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: Offset(0, 3),
-          ),
-        ],
-        color: const Color.fromARGB(255, 255, 255, 255),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              dupla,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          SizedBox(width: 8),
-          Checkbox(
-            activeColor: corCheckbox,
-            value: resultadosPartidas[partidaId] == duplaId,
-            onChanged: (bool? newValue) async {
-              if (newValue != null) {
-                // Chama a função assíncrona
-                bool resultadoValido = await verificarResultados();
+  String formatarNomeCompleto(String nomeCompleto) {
+    List<String> partes = nomeCompleto.split(" ");
+    if (partes.length > 1) {
+      return "${partes[0]} ${partes[1][0]}.";
+    } else {
+      return nomeCompleto; // Caso tenha apenas um nome
+    }
+  }
 
-                if (resultadoValido) {
-                  setState(() {
-                    resultadosPartidas[partidaId] = newValue ? duplaId : null;
-                  });
-                } else {
-                  setState(() {
-                    // Muda o estado de uma variável de controle de cor, por exemplo:
-                    corCheckbox = Colors.grey; // Define a cor como cinza
-                  });
-                  activeColor:
-                  corCheckbox == Colors.grey
-                      ? Colors.grey
-                      : Colors.black; // Usa a variável de controle de cor
-                  inactiveColor:
-                  corCheckbox == Colors.grey
-                      ? Colors.grey
-                      : Colors.yellow; // Define a cor inativa
-                }
-              }
-            },
+  Widget buildDuplaWidget(
+      String nome1, String nome2, String partidaId, String duplaId) {
+    //Widget para monstar o layout dos confrontos entre duplas
+    bool isChecked = resultadosPartidas[partidaId] == duplaId;
+    return FutureBuilder<bool>(
+      future: verificarResultados(),
+      builder: (context, snapshot) {
+        bool resultadoValido = snapshot.data ?? false;
+        Color checkboxColor = resultadoValido ? Colors.amber : Colors.grey;
+        return Container(
+          padding: EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: Offset(0, 3),
+              ),
+            ],
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Usando Expanded para garantir que o texto ocupe o espaço disponível sem ultrapassar
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nome1,
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow
+                          .ellipsis, // Limita o texto com reticências
+                      maxLines:
+                          1, // Garante que o texto fique em apenas uma linha
+                    ),
+                    Text(
+                      nome2,
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 5),
+              Checkbox(
+                value: isChecked,
+                onChanged: resultadoValido
+                    ? (bool? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            resultadosPartidas[partidaId] =
+                                newValue ? duplaId : null;
+                          });
+                        }
+                      }
+                    : null,
+                activeColor: checkboxColor,
+                checkColor: Colors.white,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
+  void proximaFase() {
+    //Função para passar de fase
+    if (faseAtual < totalFases) {
+      setState(() {
+        faseAtual++;
+        nomesDuplas.clear();
+      });
+      _carregarDadosDaFase();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Já estamos na última fase!')),
+      );
+    }
+  }
+
+  void faseAnterior() {
+    //Função para retroceder uma fase
+    if (faseAtual > 1) {
+      setState(() {
+        faseAtual--;
+        nomesDuplas.clear();
+      });
+      _carregarDadosDaFase();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Já estamos na primeira fase!')),
+      );
+    }
+  }
+
+  Future<DocumentSnapshot> buscarDadosTorneio(String idTorneio) async {
+    return await FirebaseFirestore.instance
+        .collection('torneios')
+        .doc(idTorneio)
+        .get();
+  }
+
+  Future<bool> verificarResultados() async {
+    QuerySnapshot snapshot = await _firestore
+        .collection('chaveamento')
+        .doc(widget.torneioId)
+        .collection('fase$faseAtual')
+        .get();
+
+    QuerySnapshot? snapshotFaseAnterior;
+
+    if (faseAtual > 1) {
+      snapshotFaseAnterior = await _firestore
+          .collection('chaveamento')
+          .doc(widget.torneioId)
+          .collection('fase${faseAtual - 1}')
+          .get();
+    }
+
+    bool faseAtualValida =
+        snapshot.docs.every((doc) => doc['resultado'] == null);
+
+    bool faseAnteriorValida =
+        true; // Se não houver fase anterior, não impede a liberação do botão
+    if (snapshotFaseAnterior != null) {
+      faseAnteriorValida =
+          snapshotFaseAnterior.docs.every((doc) => doc['resultado'] != null);
+    }
+
+    // Retorna true se a fase atual for válida (resultado == null) e a fase anterior (se existir) tiver resultado != null.
+    return faseAtualValida && faseAnteriorValida;
+  }
+
   Future<void> _carregarDadosDaFase() async {
+    //Função para carregar dados da fase atual
     setState(() {
       carregandoNomes = true;
       nomesDuplas.clear();
@@ -231,16 +381,19 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
   }
 
   Future<void> buscarNomes(List<String> idsDuplas) async {
+    // Função que busca os nomes com base nos ids das duplas
     for (String idDupla in idsDuplas) {
       await Torneios().getDupla(idDupla, (nome1, nome2) {
         setState(() {
-          nomesDuplas[idDupla] = '$nome1\n$nome2';
+          // Armazena cada dupla como uma lista de duas strings (nomes dos participantes)
+          nomesDuplas[idDupla] = [nome1, nome2];
         });
       });
     }
   }
 
   Future<void> _obterTotalFases() async {
+    //Função para obter o total de fases do torneio
     //Obter total de fases
     final chaveamentoRef =
         _firestore.collection('chaveamento').doc(widget.torneioId);
@@ -252,28 +405,8 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     }
   }
 
-  Stream<QuerySnapshot> getPartidasDaFase(int fase) {
-    //Buscar partidas da fase
-    return FirebaseFirestore.instance
-        .collection('chaveamento')
-        .doc(widget.torneioId)
-        .collection('fase$fase')
-        .snapshots();
-  }
-
-  Future<bool> verificarResultados() async {
-    //Verifica o resultado para mostrar o botão
-    // Obtém as partidas da fase atual e verifica se algum documento tem resultado == null
-    QuerySnapshot snapshot = await _firestore
-        .collection('chaveamento')
-        .doc(widget.torneioId)
-        .collection('fase$faseAtual')
-        .get();
-    // Retorna true se algum documento tiver o campo resultado como null
-    return snapshot.docs.every((doc) => doc['resultado'] == null);
-  }
-
   Future<void> enviarResultados() async {
+    //Enviar resultados ao banco
     //Enviar Resultado para o Banco
     List<Future<void>> atualizacoes = [];
 
@@ -338,13 +471,13 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           partidaIndex++;
         }
       }
-
+      proximaFase();
       await batch.commit();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
-                'Resultados enviados e sorteio realizado para a fase ${faseAtual + 1}!')),
+                'Resultados enviados e sorteio realizado para a fase ${faseAtual}!')),
       );
     } else {
       // Obter a última partida da fase atual
