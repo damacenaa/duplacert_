@@ -194,8 +194,7 @@ class Torneios {
         .collection('fase$faseAtual')
         .get();
 
-    bool faseAtualValida =
-        snapshot.docs.every((doc) => doc['resultado'] == null);
+    bool faseAtualValida = snapshot.docs.any((doc) => doc['resultado'] == null);
 
     if (faseAtual > 1) {
       var faseAnteriorSnapshot = await _firestore

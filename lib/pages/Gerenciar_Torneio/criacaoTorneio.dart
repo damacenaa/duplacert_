@@ -1,8 +1,8 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:duplacert/models/database.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/torneiosTela.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:math';
@@ -353,7 +353,7 @@ class _CriarTorneioState extends State<CriarTorneio> {
           'disponibilidade': disponTorneio,
           'status': 'Inscrições'
         });
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         print("Erro: Usuário não autenticado");
       }

@@ -251,13 +251,14 @@ class _BuscarTorneioState extends State<buscarTorneio> {
       torneios = filtros.isEmpty
           ? List.from(todosTorneios)
           : todosTorneios.where((torneio) {
-              // Verifica se pelo menos um filtro é satisfeito
-              return filtros.entries.any((filtro) {
-                final value = filtro.value?.toString();
-                if (value == null || value.isEmpty)
-                  return false; // Ignora filtros vazios
+              // Verifica se todos os filtros não vazios são satisfeitos
+              return filtros.entries.every((filtro) {
+                final filtroValue = filtro.value?.toString()?.trim();
+                if (filtroValue == null || filtroValue.isEmpty) {
+                  return true; // Ignora filtros vazios ou nulos
+                }
                 final atributo = _getAtributoTorneio(torneio, filtro.key);
-                return atributo?.toString() == value;
+                return atributo?.toString()?.trim() == filtroValue;
               });
             }).toList();
     });

@@ -162,18 +162,21 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
+        onPressed: () async {
+          bool? torneioCriado = await showModalBottomSheet(
             context: context,
             builder: (context) {
               return CriarTorneio();
             },
           );
+
+          // Se o torneio foi criado, recarregue a lista
+          if (torneioCriado == true) {
+            await carregarTorneios(); // Função para recarregar os torneios
+          }
         },
-        backgroundColor:
-            Color.fromARGB(235, 236, 160, 20), // Cor de fundo do botão
-        foregroundColor: const Color.fromARGB(
-            255, 5, 5, 5), // Cor do ícone (dentro do botão)
+        backgroundColor: Color.fromARGB(235, 236, 160, 20),
+        foregroundColor: const Color.fromARGB(255, 5, 5, 5),
         child: const Icon(Icons.add),
       ),
     );

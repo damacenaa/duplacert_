@@ -16,15 +16,11 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int faseAtual = 1;
   int totalFases = 1;
-  Map<String, String> nomesDuplas = {};
+  Map<String, List<String>> nomesDuplas = {};
   Map<String, String?> resultadosPartidas = {};
   bool carregandoNomes = true;
-<<<<<<< Updated upstream
-  Color corCheckbox = Colors.blue;
-=======
   bool isFinalizado = false;
-  DocumentSnapshot? dadosTorneio; //Mapa para acesso aos dados do torneio
->>>>>>> Stashed changes
+  DocumentSnapshot? dadosTorneio;
 
   @override
   void initState() {
@@ -32,8 +28,6 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     carregarDadosIniciais();
   }
 
-<<<<<<< Updated upstream
-=======
   @override
   Widget build(BuildContext context) {
     //Main widget
@@ -47,7 +41,6 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
             FutureBuilder<bool>(
               future: Torneios().verificarStatus(widget.torneioId, faseAtual),
               builder: (context, snapshot) {
-                // Considera como `true` se `snapshot.data` for `true` ou `null`
                 bool isEnabled = snapshot.data == true;
                 return IconButton(
                   icon: Icon(Icons.refresh_rounded),
@@ -82,13 +75,18 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
         FutureBuilder<bool>(
           future: Torneios().verificarResultados(widget.torneioId, faseAtual),
           builder: (context, snapshot) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: enviarResultados,
-                child: Text('Enviar resultados'),
-              ),
-            );
+            if (snapshot.hasData && snapshot.data == true) {
+              // Exibe o botão se o Future retornar true
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: enviarResultados,
+                  child: const Text('Enviar resultados'),
+                ),
+              );
+            }
+            // Retorna um widget vazio se o Future retornar false
+            return const SizedBox.shrink();
           },
         ),
       ],
@@ -294,7 +292,7 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
                 itemCount: nomesDuplas.length,
                 itemBuilder: (context, index) {
                   String idDupla = nomesDuplas.keys.elementAt(index);
-                  List<String>? nomes = nomesDuplas[idDupla];
+                  String? nomes = nomesDuplas[idDupla] as String?;
 
                   String nomeDaDupla = nomes != null
                       ? "${nomes[0]} e ${nomes[1]}"
@@ -335,19 +333,14 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     );
   }
 
->>>>>>> Stashed changes
   void proximaFase() {
     if (faseAtual < totalFases) {
       setState(() {
         faseAtual++;
         nomesDuplas.clear();
-        _carregarDadosDaFase();
       });
-<<<<<<< Updated upstream
       resultadosPartidas = {};
       _carregarDadosDaFase();
-=======
->>>>>>> Stashed changes
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Já estamos na última fase!')),
@@ -360,13 +353,9 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
       setState(() {
         faseAtual--;
         nomesDuplas.clear();
-        _carregarDadosDaFase();
       });
-<<<<<<< Updated upstream
       resultadosPartidas = {};
       _carregarDadosDaFase();
-=======
->>>>>>> Stashed changes
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Já estamos na primeira fase!')),
@@ -374,140 +363,24 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     }
   }
 
-<<<<<<< Updated upstream
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Fase $faseAtual'),
-        actions: [
-          IconButton(icon: Icon(Icons.arrow_back), onPressed: faseAnterior),
-          IconButton(icon: Icon(Icons.arrow_forward), onPressed: proximaFase),
-        ],
-      ),
-      body: carregandoNomes
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: buildChaveamentoLayout(),
-                ),
-                FutureBuilder<bool>(
-                  future: verificarResultados(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData && snapshot.data == true) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ElevatedButton(
-                          onPressed: enviarResultados,
-                          child: Text('Enviar resultados'),
-                        ),
-                      );
-                    }
-                    return SizedBox();
-                  },
-                ),
-              ],
-            ),
-    );
-  }
+  Future<void> carregarDadosIniciais() async {
+    // Carrega dados iniciais do torneio e fases
+    DocumentSnapshot docTorneio =
+        await _firestore.collection('torneios').doc(widget.torneioId).get();
 
-  Widget buildChaveamentoLayout() {
-    return ListView.builder(
-      itemCount: resultadosPartidas.keys.length,
-      itemBuilder: (context, index) {
-        String partidaId = resultadosPartidas.keys.elementAt(index);
-        String dupla1Id = nomesDuplas.keys.elementAt(index * 2);
-        String dupla2Id = nomesDuplas.keys.elementAt(index * 2 + 1);
+    final chaveamentoRef =
+        _firestore.collection('chaveamento').doc(widget.torneioId);
+    final chaveamentoSnapshot = await chaveamentoRef.get();
+    if (chaveamentoSnapshot.exists) {
+      setState(() {
+        dadosTorneio = docTorneio;
+        isFinalizado = docTorneio['status'] == 'finalizado';
+        totalFases = chaveamentoSnapshot.data()!['totalFases'];
+      });
+    }
 
-        String dupla1 =
-            nomesDuplas[dupla1Id] ?? 'Vencedor fase $faseAtual-1...';
-        String dupla2 =
-            nomesDuplas[dupla2Id] ?? 'Vencedor fase $faseAtual-1...';
-
-        return Card(
-          color: Colors.amber,
-          margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: Row(
-              children: [
-                Expanded(
-                    child: buildDuplaWidget(dupla1, partidaId, dupla1Id, true)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text('X', style: TextStyle(fontSize: 18)),
-                ),
-                Expanded(
-                    child:
-                        buildDuplaWidget(dupla2, partidaId, dupla2Id, false)),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget buildDuplaWidget(
-      String dupla, String partidaId, String duplaId, bool isDupla1) {
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: Offset(0, 3),
-          ),
-        ],
-        color: const Color.fromARGB(255, 255, 255, 255),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              dupla,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          SizedBox(width: 8),
-          Checkbox(
-            activeColor: corCheckbox,
-            value: resultadosPartidas[partidaId] == duplaId,
-            onChanged: (bool? newValue) async {
-              if (newValue != null) {
-                // Chama a função assíncrona
-                bool resultadoValido = await verificarResultados();
-
-                if (resultadoValido) {
-                  setState(() {
-                    resultadosPartidas[partidaId] = newValue ? duplaId : null;
-                  });
-                } else {
-                  setState(() {
-                    // Muda o estado de uma variável de controle de cor, por exemplo:
-                    corCheckbox = Colors.grey; // Define a cor como cinza
-                  });
-                  activeColor:
-                  corCheckbox == Colors.grey
-                      ? Colors.grey
-                      : Colors.black; // Usa a variável de controle de cor
-                  inactiveColor:
-                  corCheckbox == Colors.grey
-                      ? Colors.grey
-                      : Colors.yellow; // Define a cor inativa
-                }
-              }
-            },
-          ),
-        ],
-      ),
-    );
+    // Carrega a fase inicial
+    await _carregarDadosDaFase();
   }
 
   Future<void> _carregarDadosDaFase() async {
@@ -517,10 +390,6 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
       resultadosPartidas.clear();
     });
 
-=======
-  Future<void> _carregarDadosDaFase() async {
-    setState(() => carregandoNomes = true);
->>>>>>> Stashed changes
     List<String> idsDuplas = [];
     Map<String, String?> resultadosTemp = {};
 
@@ -532,18 +401,22 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           .get();
 
       for (var partida in snapshot.docs) {
-        idsDuplas.addAll([partida['dupla1'], partida['dupla2']]);
+        idsDuplas.add(partida['dupla1']);
+        idsDuplas.add(partida['dupla2']);
         resultadosTemp[partida.id] = partida['resultado'] as String?;
       }
 
       await buscarNomes(idsDuplas);
+
       setState(() {
         resultadosPartidas = resultadosTemp;
         carregandoNomes = false;
       });
     } catch (e) {
       print("Erro ao carregar dados da fase: $e");
-      setState(() => carregandoNomes = false);
+      setState(() {
+        carregandoNomes = false;
+      });
     }
   }
 
@@ -551,25 +424,8 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
     for (String idDupla in idsDuplas) {
       await Torneios().getDupla(idDupla, (nome1, nome2) {
         setState(() {
-<<<<<<< Updated upstream
-          nomesDuplas[idDupla] = '$nome1\n$nome2';
-=======
           nomesDuplas[idDupla] = [nome1, nome2];
->>>>>>> Stashed changes
         });
-      });
-    }
-  }
-
-<<<<<<< Updated upstream
-  Future<void> _obterTotalFases() async {
-    //Obter total de fases
-    final chaveamentoRef =
-        _firestore.collection('chaveamento').doc(widget.torneioId);
-    final chaveamentoSnapshot = await chaveamentoRef.get();
-    if (chaveamentoSnapshot.exists) {
-      setState(() {
-        totalFases = chaveamentoSnapshot.data()!['totalFases'];
       });
     }
   }
@@ -583,23 +439,8 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
         .snapshots();
   }
 
-  Future<bool> verificarResultados() async {
-    //Verifica o resultado para mostrar o botão
-    // Obtém as partidas da fase atual e verifica se algum documento tem resultado == null
-    QuerySnapshot snapshot = await _firestore
-        .collection('chaveamento')
-        .doc(widget.torneioId)
-        .collection('fase$faseAtual')
-        .get();
-    // Retorna true se algum documento tiver o campo resultado como null
-    return snapshot.docs.every((doc) => doc['resultado'] == null);
-  }
-
   Future<void> enviarResultados() async {
     //Enviar Resultado para o Banco
-=======
-  Future<void> enviarResultados() async {
->>>>>>> Stashed changes
     List<Future<void>> atualizacoes = [];
 
     // Envia os resultados de cada partida
@@ -611,10 +452,8 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
             .doc(widget.torneioId)
             .collection('fase$faseAtual')
             .doc(partidaId)
-            .update({
-          'resultado': idVencedora,
-          'status': 'Finalizado',
-        }).then((_) {
+            .update({'resultado': idVencedora, 'status': 'Finalizado'}).then(
+                (_) {
           print('Resultado enviado para a partida $partidaId: $idVencedora');
         }).catchError((error) {
           print('Erro ao enviar resultado: $error');
@@ -668,13 +507,14 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
       }
 
       await batch.commit();
-
+      proximaFase();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
-                'Resultados enviados e sorteio realizado para a fase ${faseAtual + 1}!')),
+                'Resultados enviados e sorteio realizado para a fase ${faseAtual}!')),
       );
     } else {
+      // Obter a última partida da fase atual
 // Obtém o único documento da fase atual (que é a fase final)
       var partidaFinalSnapshot = await _firestore
           .collection('chaveamento')
@@ -703,34 +543,7 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           SnackBar(
               content: Text('Torneio finalizado! Campeão e vice armazenados.')),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ChaveamentoPage(
-                    torneioId: widget.torneioId,
-                  )),
-        );
       }
     }
-  }
-
-  Future<void> carregarDadosIniciais() async {
-    // Carrega dados iniciais do torneio e fases
-    DocumentSnapshot docTorneio =
-        await _firestore.collection('torneios').doc(widget.torneioId).get();
-
-    final chaveamentoRef =
-        _firestore.collection('chaveamento').doc(widget.torneioId);
-    final chaveamentoSnapshot = await chaveamentoRef.get();
-    if (chaveamentoSnapshot.exists) {
-      setState(() {
-        dadosTorneio = docTorneio;
-        isFinalizado = docTorneio['status'] == 'finalizado';
-        totalFases = chaveamentoSnapshot.data()!['totalFases'];
-      });
-    }
-
-    // Carrega a fase inicial
-    await _carregarDadosDaFase();
   }
 }

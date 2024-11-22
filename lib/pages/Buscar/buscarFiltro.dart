@@ -23,6 +23,11 @@ class _buscarFiltro extends State<buscaFiltro> {
   List<String> cidades = [];
   bool carregamentoCidades = false;
   DateTime? dataSelecionada;
+  @override
+  void initState() {
+    super.initState();
+    carregarEstados();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,13 +200,19 @@ class _buscarFiltro extends State<buscaFiltro> {
                 onPressed: () {
                   // Fecha o modal antes de chamar a função para evitar problemas com o contexto
                   Map<String, dynamic> filtros = {
-                    'nome': nomeTorneio.text,
+                    'nome': nomeTorneio.text.trim(),
                     'participantes': numeroParticipantes,
-                    'categoria': categoriaSelecionada?.toString(),
-                    'uf': estadoSelecionado?.toString(),
-                    'cidade': cidadeSelecionada?.toString(),
-                    'data': dataController,
+                    'categoria': categoriaSelecionada?.toString()?.trim(),
+                    'uf': estadoSelecionado?.toString()?.trim(),
+                    'cidade': cidadeSelecionada?.toString()?.trim(),
+                    'data': dataController.text
+                        .trim(), // Acesso ao texto do controlador
                   };
+
+// Remover entradas nulas ou vazias
+                  filtros.removeWhere((key, value) =>
+                      value == null || value.toString().isEmpty);
+
                   print(filtros);
                   Navigator.pop(context, filtros);
                 },
