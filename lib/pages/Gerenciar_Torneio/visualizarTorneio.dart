@@ -1,6 +1,6 @@
 import 'package:duplacert/models/torneio_model.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/chaveamento.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/torneiosTela.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +18,7 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _formKey = GlobalKey<FormState>();
   String nomeTorneio = '';
+  String status = '';
   String codigoTorneio = '';
   int numeroMaximoParticipantes = 0;
   int participantesAtuais = 0;
@@ -30,7 +31,6 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
   void initState() {
     super.initState();
     _carregarDadosTorneio();
-    habilitarSorteio();
   }
 
   @override
@@ -156,32 +156,23 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
             ElevatedButton(
               onPressed: sorteioValidacao
                   ? () async {
-                      DocumentSnapshot torneioSnapshot = await FirebaseFirestore
-                          .instance
-                          .collection('torneios')
-                          .doc(widget.idTorneio)
-                          .get();
-
-                      if (torneioSnapshot.exists) {
-                        String status = torneioSnapshot['status'];
-
-                        if (status == 'Inscrições') {
-                          await torneios
-                              .realizarSorteioChaveamento(widget.idTorneio);
-                        }
-
-                        // Navegue para ChaveamentoPage com a mesma instância de torneios
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChaveamentoPage(
-                              torneioId: widget.idTorneio,
-                            ),
-                          ),
-                        );
-                      } else {
-                        print("Torneio não encontrado.");
+                      print(participantesAtuais);
+                      print('num$numeroMaximoParticipantes');
+                      print(sorteioValidacao);
+                      print(status);
+                      if (status == 'Inscrições') {
+                        await torneios
+                            .realizarSorteioChaveamento(widget.idTorneio);
                       }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChaveamentoPage(
+                            torneioId: widget.idTorneio,
+                          ),
+                        ),
+                      );
                     }
                   : null,
               style: ElevatedButton.styleFrom(
@@ -192,9 +183,11 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
                 minimumSize: Size(double.infinity, 50), // Tamanho do botão
               ),
               child: Text(
-                sorteioValidacao
-                    ? 'Realizar Sorteio'
-                    : 'Participantes insuficientes',
+                !sorteioValidacao
+                    ? 'Participantes insuficientes'
+                    : (status == 'Inscrições'
+                        ? 'Realizar Sorteio'
+                        : 'Visualizar Torneio'),
                 style: TextStyle(fontSize: 18),
               ),
             ),
@@ -208,8 +201,9 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
     setState(() {
       if (participantesAtuais == numeroMaximoParticipantes) {
         sorteioValidacao = true;
-      } else
+      } else {
         sorteioValidacao = false;
+      }
     });
   }
 
@@ -225,6 +219,7 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
         nomeTorneio = torneioSnapshot['nome'];
         codigoTorneio = torneioSnapshot['codigoTorneio'];
         numeroMaximoParticipantes = torneioSnapshot['participantes'];
+        status = torneioSnapshot['status'];
 
         // Verifique se 'data()' não é null antes de acessar 'containsKey'
         var dadosTorneio = torneioSnapshot.data() as Map<String, dynamic>?;
@@ -234,6 +229,7 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
           participantesAtuais = (dadosTorneio['duplas'] as List).length;
           participantes = List<String>.from(dadosTorneio['duplas']);
           buscarNomes(participantes);
+          habilitarSorteio();
         } else {
           // Se 'duplas' não existe, inicialize os valores adequadamente
           participantesAtuais = 0;

@@ -3,7 +3,7 @@ import 'package:duplacert/models/database.dart';
 import 'package:duplacert/models/torneio_model.dart';
 import 'package:duplacert/pages/Config/config.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/criacaoTorneio.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/modificarTorneio.dart';
+import 'package:duplacert/pages/Gerenciar_Torneio/visualizarTorneio.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/torneioCard.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/chaveamento.dart';
+import 'package:duplacert/pages/Buscar/torneioCardInsert.dart';
 import 'package:duplacert/pages/Gerenciar_Torneio/torneioCard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +30,42 @@ class Torneios {
         final dataTorneio = document['dataTorneio'];
 
         torneioList.add(Torneio(
+            idTorneio: idTorneio,
+            nome: nome,
+            categoria: categoria,
+            cidade: cidade,
+            estado: estado,
+            numParticipantes: participantes,
+            dataTorneio: dataTorneio));
+      }
+    } catch (e) {
+      print('Erro ao buscar os serviços: $e');
+      // Você pode lançar uma exceção personalizada aqui se preferir.
+    }
+
+    return torneioList;
+  }
+
+  Future<List<TorneioInsert>> getTorneioById(String codigo) async {
+    List<TorneioInsert> torneioList = [];
+
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('torneios')
+          .where('codigoTorneio', isEqualTo: codigo)
+          .limit(1)
+          .get();
+
+      for (QueryDocumentSnapshot document in querySnapshot.docs) {
+        final idTorneio = document.id;
+        final nome = document['nome'];
+        final categoria = document['categoria'];
+        final cidade = document['cidade'];
+        final estado = document['estado'];
+        final participantes = document['participantes'];
+        final dataTorneio = document['dataTorneio'];
+
+        torneioList.add(TorneioInsert(
             idTorneio: idTorneio,
             nome: nome,
             categoria: categoria,
@@ -149,5 +185,112 @@ class Torneios {
     });
 
     print("Chaveamento criado com sucesso!");
+  }
+
+  Future<bool> verificarResultados(String idtorneio, int faseAtual) async {
+    var snapshot = await _firestore
+        .collection('chaveamento')
+        .doc(idtorneio)
+        .collection('fase$faseAtual')
+        .get();
+
+    bool faseAtualValida =
+        snapshot.docs.every((doc) => doc['resultado'] == null);
+
+    if (faseAtual > 1) {
+      var faseAnteriorSnapshot = await _firestore
+          .collection('chaveamento')
+          .doc(idtorneio)
+          .collection('fase${faseAtual - 1}')
+          .get();
+      bool faseAnteriorCompleta =
+          faseAnteriorSnapshot.docs.any((doc) => doc['resultado'] != null);
+
+      return faseAnteriorCompleta && faseAtualValida;
+    }
+
+    return faseAtualValida;
+  }
+
+  Future<bool> verificarStatus(String idtorneio, int faseAtual) async {
+    // Verifica se a fase atual tem status 'Finalizado'
+    if (faseAtual == 1) {
+      return false;
+    }
+    var snapshotAtual = await FirebaseFirestore.instance
+        .collection('chaveamento')
+        .doc(idtorneio)
+        .collection('fase${faseAtual}')
+        .get();
+    bool faseAtualFinalizada =
+        snapshotAtual.docs.any((doc) => doc['resultado'] != null);
+
+    if (faseAtualFinalizada) return false;
+
+    var snapshotFaseAnterior = await FirebaseFirestore.instance
+        .collection('chaveamento')
+        .doc(idtorneio)
+        .collection('fase${faseAtual - 1}')
+        .limit(1)
+        .get();
+
+    if (snapshotFaseAnterior.docs.isNotEmpty) {
+      bool faseAnteriorFinalizada =
+          snapshotFaseAnterior.docs.any((doc) => doc['status'] == 'Finalizado');
+
+      return faseAnteriorFinalizada;
+    }
+
+    // Se não existe uma próxima fase, retorna true porque só a fase atual está 'Finalizado'
+    return true;
+  }
+
+  Future<void> limparFase(
+      String torneioId, int faseAtual, Map<String, String?> idPartidas) async {
+    List<String> idsPartidaAnt =
+        await buscarIdsFaseAnterior(torneioId, faseAtual);
+    for (var partidaId in idPartidas.keys) {
+      await FirebaseFirestore.instance
+          .collection('chaveamento')
+          .doc(torneioId)
+          .collection('fase$faseAtual')
+          .doc(partidaId)
+          .update({
+        'dupla1': 'Participante1',
+        'dupla2': 'Participante2',
+      });
+    }
+    for (var partidaId in idsPartidaAnt) {
+      await FirebaseFirestore.instance
+          .collection('chaveamento')
+          .doc(torneioId)
+          .collection('fase${faseAtual - 1}')
+          .doc(partidaId)
+          .update({
+        'resultado': null,
+        'status': 'Não finalizado',
+      });
+    }
+  }
+
+  Future<List<String>> buscarIdsFaseAnterior(
+      String idTorneio, faseAtual) async {
+    try {
+      // Referência ao documento do torneio dentro da coleção 'chaveamento'
+      final DocumentReference torneioRef =
+          FirebaseFirestore.instance.collection('chaveamento').doc(idTorneio);
+
+      // Snapshot da subcoleção 'faseatual'
+      final QuerySnapshot subcolecaoSnapshot =
+          await torneioRef.collection('fase${faseAtual - 1}').get();
+
+      // Extração dos IDs dos documentos na subcoleção
+      List<String> ids = subcolecaoSnapshot.docs.map((doc) => doc.id).toList();
+
+      return ids;
+    } catch (e) {
+      print('Erro ao buscar IDs da fase atual: $e');
+      return [];
+    }
   }
 }

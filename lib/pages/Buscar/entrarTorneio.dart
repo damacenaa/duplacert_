@@ -16,35 +16,6 @@ class _Entrartorneio extends State<Entrartorneio> {
   String nomeDupla = ''; // Para armazenar o nome da dupla encontrado
   bool duplaEncontrada = false; // Controle para saber se o nome foi encontrado
 
-  Future<void> buscarDuplaPorCodigo(String codigo) async {
-    try {
-      QuerySnapshot userSnapshot = await FirebaseFirestore.instance
-          .collection('user')
-          .where('codigo', isEqualTo: codigo)
-          .limit(1)
-          .get();
-
-      if (userSnapshot.docs.isNotEmpty) {
-        setState(() {
-          var user = userSnapshot.docs.first;
-          nomeDupla = user['nome'];
-          duplaEncontrada = true;
-        });
-      } else {
-        setState(() {
-          nomeDupla = 'Código não encontrado';
-          duplaEncontrada = false;
-        });
-      }
-    } catch (e) {
-      print('Erro ao buscar dupla: $e');
-      setState(() {
-        nomeDupla = 'Erro na busca';
-        duplaEncontrada = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -97,48 +68,34 @@ class _Entrartorneio extends State<Entrartorneio> {
       ],
     );
   }
-}
 
-Future<void> buscarTorneioPorCodigo(
-    String codigo, dynamic _firestore, dynamic context) async {
-  try {
-    QuerySnapshot torneiosSnapshot = await _firestore
-        .collection('torneios')
-        .where('codigoTorneio', isEqualTo: codigo)
-        .limit(1)
-        .get();
+  Future<void> buscarDuplaPorCodigo(String codigo) async {
+    try {
+      QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('user')
+          .where('codigo', isEqualTo: codigo)
+          .limit(1)
+          .get();
 
-    if (torneiosSnapshot.docs.isNotEmpty) {
-      var torneio = torneiosSnapshot.docs.first;
-
-      // Exibir o diálogo perguntando se deseja entrar no torneio
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Torneio encontrado'),
-          content: Text('Deseja entrar no torneio ${torneio['nome']}?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Fecha o diálogo
-              },
-              child: Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Fecha o diálogo
-                abrirConviteDupla(context, torneio.id);
-              },
-              child: Text('Sim'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      print('Nenhum torneio encontrado com o código fornecido.');
+      if (userSnapshot.docs.isNotEmpty) {
+        setState(() {
+          var user = userSnapshot.docs.first;
+          nomeDupla = user['nome'];
+          duplaEncontrada = true;
+        });
+      } else {
+        setState(() {
+          nomeDupla = 'Código não encontrado';
+          duplaEncontrada = false;
+        });
+      }
+    } catch (e) {
+      print('Erro ao buscar dupla: $e');
+      setState(() {
+        nomeDupla = 'Erro na busca';
+        duplaEncontrada = false;
+      });
     }
-  } catch (e) {
-    print('Erro ao buscar torneio: $e');
   }
 }
 

@@ -1,21 +1,16 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:duplacert/models/database.dart';
-import 'package:duplacert/pages/Gerenciar_Torneio/torneios.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'dart:math';
 import 'dart:convert';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
-class CriarTorneio extends StatefulWidget {
+class buscaFiltro extends StatefulWidget {
   @override
-  State<CriarTorneio> createState() => _CriarTorneioState();
+  State<buscaFiltro> createState() => _buscarFiltro();
 }
 
-class _CriarTorneioState extends State<CriarTorneio> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _buscarFiltro extends State<buscaFiltro> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController nomeTorneio = TextEditingController();
   TextEditingController dataController = TextEditingController();
@@ -28,13 +23,6 @@ class _CriarTorneioState extends State<CriarTorneio> {
   List<String> cidades = [];
   bool carregamentoCidades = false;
   DateTime? dataSelecionada;
-  final FirebaseAuth auth = FirebaseAuth.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    carregarEstados();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +30,7 @@ class _CriarTorneioState extends State<CriarTorneio> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
-          'Cadastro de Torneio',
+          'Buscar Torneio',
           style: TextStyle(
             fontSize: 25,
             fontFamily: 'inter',
@@ -88,8 +76,6 @@ class _CriarTorneioState extends State<CriarTorneio> {
                     labelText: 'Nome do Torneio',
                     labelStyle: TextStyle(fontSize: 17),
                   ),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Digite o nome do torneio' : null,
                 ),
               ),
               Padding(
@@ -140,32 +126,6 @@ class _CriarTorneioState extends State<CriarTorneio> {
                   },
                   decoration: const InputDecoration(
                     labelText: 'Categoria',
-                    labelStyle: TextStyle(fontSize: 17),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: DropdownButtonFormField<String>(
-                  value: disponTorneio,
-                  hint: const Text(
-                    'Selecione a disponibilidade',
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.normal),
-                  ),
-                  items: ['Privado', 'Publico'].map((dispon) {
-                    return DropdownMenuItem(
-                      value: dispon,
-                      child: Text(dispon),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      disponTorneio = value;
-                    });
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Disponibilidade',
                     labelStyle: TextStyle(fontSize: 17),
                   ),
                 ),
@@ -231,68 +191,21 @@ class _CriarTorneioState extends State<CriarTorneio> {
                 ),
               ),
               const SizedBox(height: 20),
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color.fromARGB(249, 255, 239, 9),
-                        Color.fromARGB(227, 236, 161, 20),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        bool confirmed = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Confirmar'),
-                              content:
-                                  const Text('Você deseja criar este torneio?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                  child: const Text('Cancelar'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                  child: const Text('Confirmar'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        if (confirmed) {
-                          criarTorneio();
-                        }
-                      }
-                    },
-                    child: const Text(
-                      'Criar Torneio',
-                      style: TextStyle(
-                        color: Color.fromARGB(253, 8, 8, 8),
-                        fontSize: 17,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ),
-                ),
+              ElevatedButton(
+                onPressed: () {
+                  // Fecha o modal antes de chamar a função para evitar problemas com o contexto
+                  Map<String, dynamic> filtros = {
+                    'nome': nomeTorneio.text,
+                    'participantes': numeroParticipantes,
+                    'categoria': categoriaSelecionada?.toString(),
+                    'uf': estadoSelecionado?.toString(),
+                    'cidade': cidadeSelecionada?.toString(),
+                    'data': dataController,
+                  };
+                  print(filtros);
+                  Navigator.pop(context, filtros);
+                },
+                child: const Text("Buscar"),
               ),
             ],
           ),
@@ -336,30 +249,6 @@ class _CriarTorneioState extends State<CriarTorneio> {
     }
   }
 
-  Future<void> criarTorneio() async {
-    if (_formKey.currentState!.validate()) {
-      User? usuario = auth.currentUser;
-      String codigo = DatabaseMethods().gerarCodigo(10);
-      if (usuario != null) {
-        await _firestore.collection('torneios').add({
-          'nome': nomeTorneio.text,
-          'estado': estadoSelecionado,
-          'cidade': cidadeSelecionada,
-          'participantes': numeroParticipantes,
-          'categoria': categoriaSelecionada,
-          'administrador': usuario.uid,
-          'dataTorneio': dataSelecionada,
-          'codigoTorneio': codigo,
-          'disponibilidade': disponTorneio,
-          'status': 'Inscrições'
-        });
-        Navigator.pop(context);
-      } else {
-        print("Erro: Usuário não autenticado");
-      }
-    }
-  }
-
   Future<void> _selecionarData(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -380,12 +269,5 @@ class _CriarTorneioState extends State<CriarTorneio> {
             "${dataSemHorario.day}/${dataSemHorario.month}/${dataSemHorario.year}"; // Formatação da data
       });
     }
-  }
-
-  @override
-  void dispose() {
-    nomeTorneio.dispose();
-    dataController.dispose();
-    super.dispose();
   }
 }
