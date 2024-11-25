@@ -3,16 +3,16 @@ import 'package:duplacert/models/torneio_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ChaveamentoPage extends StatefulWidget {
+class MeuTorneio extends StatefulWidget {
   final String torneioId;
 
-  ChaveamentoPage({required this.torneioId});
+  MeuTorneio({required this.torneioId});
 
   @override
-  _ChaveamentoPageState createState() => _ChaveamentoPageState();
+  _meuTorneio createState() => _meuTorneio();
 }
 
-class _ChaveamentoPageState extends State<ChaveamentoPage> {
+class _meuTorneio extends State<MeuTorneio> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int faseAtual = 1;
   int totalFases = 1;
@@ -38,59 +38,15 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
         appBar: AppBar(
           title: Text('Fase $faseAtual'),
           actions: [
-            FutureBuilder<bool>(
-              future: Torneios().verificarStatus(widget.torneioId, faseAtual),
-              builder: (context, snapshot) {
-                bool isEnabled = snapshot.data == true;
-                return IconButton(
-                  icon: Icon(Icons.refresh_rounded),
-                  onPressed: isEnabled
-                      ? () async {
-                          Torneios().limparFase(
-                              widget.torneioId, faseAtual, resultadosPartidas);
-                          faseAnterior();
-                        }
-                      : null,
-                  color: Colors.amber,
-                  iconSize: 30,
-                );
-                // Retorna um widget vazio enquanto aguarda o futuro
-              },
-            ),
             IconButton(icon: Icon(Icons.arrow_back), onPressed: faseAnterior),
             IconButton(icon: Icon(Icons.arrow_forward), onPressed: proximaFase),
           ],
         ),
         body: carregandoNomes
             ? Center(child: CircularProgressIndicator())
-            : chaveamentoWidget(),
+            : confrontoLayout(),
       );
     }
-  }
-
-  Widget chaveamentoWidget() {
-    return Column(
-      children: [
-        Expanded(child: confrontoLayout()),
-        FutureBuilder<bool>(
-          future: Torneios().verificarResultados(widget.torneioId, faseAtual),
-          builder: (context, snapshot) {
-            if (snapshot.hasData && snapshot.data == true) {
-              // Exibe o botão se o Future retornar true
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  onPressed: enviarResultados,
-                  child: const Text('Enviar resultados'),
-                ),
-              );
-            }
-            // Retorna um widget vazio se o Future retornar false
-            return const SizedBox.shrink();
-          },
-        ),
-      ],
-    );
   }
 
   Widget confrontoLayout() {
@@ -292,7 +248,7 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
                 itemCount: nomesDuplas.length,
                 itemBuilder: (context, index) {
                   String idDupla = nomesDuplas.keys.elementAt(index);
-                  String? nomes = nomesDuplas[idDupla] as String?;
+                  List<String>? nomes = nomesDuplas[idDupla];
 
                   String nomeDaDupla = nomes != null
                       ? "${nomes[0]} e ${nomes[1]}"
@@ -427,114 +383,6 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           nomesDuplas[idDupla] = [nome1, nome2];
         });
       });
-    }
-  }
-
-  Future<void> enviarResultados() async {
-    //Enviar Resultado para o Banco
-    List<Future<void>> atualizacoes = [];
-
-    // Envia os resultados de cada partida
-    for (var partidaId in resultadosPartidas.keys) {
-      String? idVencedora = resultadosPartidas[partidaId];
-      if (idVencedora != null) {
-        var atualizacao = FirebaseFirestore.instance
-            .collection('chaveamento')
-            .doc(widget.torneioId)
-            .collection('fase$faseAtual')
-            .doc(partidaId)
-            .update({'resultado': idVencedora, 'status': 'Finalizado'}).then(
-                (_) {
-          print('Resultado enviado para a partida $partidaId: $idVencedora');
-        }).catchError((error) {
-          print('Erro ao enviar resultado: $error');
-        });
-        atualizacoes.add(atualizacao);
-      }
-    }
-
-    await Future.wait(atualizacoes); // Aguarda a conclusão das atualizações
-
-    // Obtém os vencedores da fase atual
-    var partidasFaseAtual = await _firestore
-        .collection('chaveamento')
-        .doc(widget.torneioId)
-        .collection('fase$faseAtual')
-        .get();
-
-    List<String> vencedores = [];
-    for (var partida in partidasFaseAtual.docs) {
-      String? vencedorId = partida['resultado'];
-      if (vencedorId != null && vencedorId.isNotEmpty) {
-        vencedores.add(vencedorId);
-      }
-    }
-
-    vencedores.shuffle(); // Embaralha a ordem dos vencedores
-
-    // Verifica se existe uma próxima fase
-    var partidasProximaFase = await _firestore
-        .collection('chaveamento')
-        .doc(widget.torneioId)
-        .collection('fase${faseAtual + 1}')
-        .get();
-
-    if (partidasProximaFase.docs.isNotEmpty &&
-        partidasProximaFase.docs.length >= vencedores.length / 2) {
-      // Atualiza a próxima fase se houver
-      WriteBatch batch = _firestore.batch();
-      int partidaIndex = 0;
-
-      for (int i = 0; i < vencedores.length; i += 2) {
-        if (i + 1 < vencedores.length) {
-          var partidaDoc = partidasProximaFase.docs[partidaIndex];
-          batch.update(partidaDoc.reference, {
-            'dupla1': vencedores[i],
-            'dupla2': vencedores[i + 1],
-            'resultado': null, // Reinicia o campo 'resultado'
-          });
-          partidaIndex++;
-        }
-      }
-
-      await batch.commit();
-      proximaFase();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Resultados enviados e sorteio realizado para a fase ${faseAtual}!')),
-      );
-    } else {
-      // Obter a última partida da fase atual
-// Obtém o único documento da fase atual (que é a fase final)
-      var partidaFinalSnapshot = await _firestore
-          .collection('chaveamento')
-          .doc(widget.torneioId)
-          .collection('fase$faseAtual')
-          .get();
-
-      if (partidaFinalSnapshot.docs.isNotEmpty) {
-        // Como há apenas um documento, pegamos o primeiro e único
-        var docPartidaFinal = partidaFinalSnapshot.docs.first;
-
-        // Identifica o campeão e vice-campeão com base no campo resultado
-        String campeaoId = docPartidaFinal['resultado'];
-        String viceCampeaoId = (docPartidaFinal['dupla1'] != campeaoId)
-            ? docPartidaFinal['dupla1']
-            : docPartidaFinal['dupla2'];
-
-        // Atualiza o documento do torneio com o status e os IDs do campeão e vice-campeão
-        await _firestore.collection('torneios').doc(widget.torneioId).update({
-          'status': 'finalizado',
-          'campeaoId': campeaoId,
-          'viceCampeaoId': viceCampeaoId,
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Torneio finalizado! Campeão e vice armazenados.')),
-        );
-      }
     }
   }
 }

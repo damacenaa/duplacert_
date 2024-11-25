@@ -34,7 +34,7 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(60),
         child: Container(
           decoration: BoxDecoration(
             boxShadow: [
