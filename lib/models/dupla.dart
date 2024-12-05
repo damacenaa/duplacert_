@@ -6,7 +6,8 @@ class Duplas {
   final FirebaseAuth auth = FirebaseAuth.instance;
   String idUser = FirebaseAuth.instance.currentUser!.uid;
 
-  Future<void> criarDupla(String codTorneio, String codigoDupla) async {
+  Future<void> criarDupla(
+      String codTorneio, String codigoDupla, context) async {
     try {
       // Verifica o parceiro com o código fornecido
       QuerySnapshot uaidParceiro = await FirebaseFirestore.instance
@@ -33,7 +34,10 @@ class Duplas {
 
         if (duplaExistente.docs.isNotEmpty ||
             parceiroJaInscrito.docs.isNotEmpty) {
-          print('Um dos participantes já está inscrito neste torneio.');
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Um dos participantes já está inscrito neste torneio.')));
         } else {
           // Cria a dupla caso ambos os participantes não estejam inscritos
           DocumentReference docRef =
@@ -51,11 +55,15 @@ class Duplas {
           await torneioRef.update({
             'duplas': FieldValue.arrayUnion([idDoDocumento]),
           });
-
-          print('Dupla criada com sucesso. ID do documento: $idDoDocumento');
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Dupla cadastrada com sucesso!')));
         }
       } else {
-        print('Nenhum parceiro encontrado com o código fornecido.');
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text('Nenhum parceiro encontrado com o código fornecido.')));
       }
     } catch (e) {
       print('Erro ao criar dupla: $e');

@@ -150,6 +150,10 @@ class Torneiocard extends StatelessWidget {
                                           onDelete();
                                           Navigator.of(context)
                                               .pop(); // Fecha o AlertDialog
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content: Text(
+                                                      'Torneio excluido com sucesso!')));
                                         },
                                         child: Text('Confirmar'),
                                       ),

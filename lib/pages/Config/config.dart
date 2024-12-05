@@ -1,6 +1,7 @@
 import 'package:duplacert/models/database.dart';
 import 'package:duplacert/pages/Auth/esqueceu_senha.dart';
 import 'package:duplacert/pages/Config/telaEdicao.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +28,7 @@ class _Config extends State<Config> {
   String generoString = '';
   String nomeString = '';
   String categoriaString = '';
+  String codigoUser = '';
 
   File? imageFile;
   final picker = ImagePicker();
@@ -84,9 +86,8 @@ class _Config extends State<Config> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              height: 260,
-              alignment: Alignment.center,
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
+              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+              margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 40),
               decoration: BoxDecoration(
                 color: Colors.white, // Cor do card
                 borderRadius: BorderRadius.circular(20), // Bordas arredondadas
@@ -100,9 +101,6 @@ class _Config extends State<Config> {
                 ],
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment
-                    .center, // Centraliza os itens no eixo horizontal
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment
@@ -143,14 +141,14 @@ class _Config extends State<Config> {
                         width: 15,
                       ),
                       Container(
-                        alignment: Alignment.center,
                         width: MediaQuery.of(context).size.width *
                             0.5, // Limita a largura do container
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               nomeString,
-                              textAlign: TextAlign.start,
+
                               softWrap:
                                   true, // Permite quebra automática de linha
                               overflow: TextOverflow
@@ -215,8 +213,23 @@ class _Config extends State<Config> {
                       ), // Espaço entre o nome e a categoria
                     ],
                   ),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 25,
+                      ),
+                      Text(
+                        'Código do usuário: $codigoUser',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: _copiarCodigo,
+                      ),
+                    ],
+                  ),
                   const SizedBox(
-                    height: 15,
+                    height: 10,
                   ),
                   const Divider(
                     color: Colors.grey, // Cor da linha divisória
@@ -415,6 +428,7 @@ class _Config extends State<Config> {
           nomeString = data['nome'];
           generoString = data['genero'];
           categoriaString = data['categoria'];
+          codigoUser = data['codigo'];
         });
       }
     } catch (error) {
@@ -437,5 +451,12 @@ class _Config extends State<Config> {
     if (updated == true) {
       _loadUserData();
     }
+  }
+
+  void _copiarCodigo() {
+    Clipboard.setData(ClipboardData(text: codigoUser));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Código do torneio copiado!')),
+    );
   }
 }

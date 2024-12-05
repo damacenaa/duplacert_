@@ -157,16 +157,7 @@ class _meuTorneio extends State<MeuTorneio> {
               SizedBox(width: 5),
               Checkbox(
                 value: isChecked,
-                onChanged: resultadoValido
-                    ? (bool? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            resultadosPartidas[partidaId] =
-                                newValue ? duplaId : null;
-                          });
-                        }
-                      }
-                    : null,
+                onChanged: null,
                 activeColor: checkboxColor,
                 checkColor: Colors.white,
               ),
@@ -217,28 +208,90 @@ class _meuTorneio extends State<MeuTorneio> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Campeões',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Container(
+              margin: EdgeInsets.all(16), // Margem para espaçamento externo
+              padding: EdgeInsets.all(16), // Espaçamento interno
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(223, 255, 255, 255), // Cor de fundo
+                borderRadius: BorderRadius.circular(15), // Bordas arredondadas
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // Sombra sutil
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: Offset(0, 5), // Direção da sombra
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centraliza os textos
+                children: [
+                  Text(
+                    'Campeões',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87, // Cor do texto
+                    ),
+                  ),
+                  SizedBox(height: 10), // Espaçamento entre os textos
+                  Text(
+                    nomesDuplas[dadosTorneio!['campeaoId']] != null
+                        ? "${nomesDuplas[dadosTorneio!['campeaoId']]![0]}\n${nomesDuplas[dadosTorneio!['campeaoId']]![1]}"
+                        : 'Carregando...',
+                    style: TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.amber),
+                    textAlign: TextAlign.center,
+                  )
+                ],
+              ),
             ),
-            Text(
-              nomesDuplas[dadosTorneio!['campeaoId']] != null
-                  ? "${nomesDuplas[dadosTorneio!['campeaoId']]![0]} e ${nomesDuplas[dadosTorneio!['campeaoId']]![1]}"
-                  : 'Carregando...',
-              style: TextStyle(fontSize: 20),
+            Container(
+              margin: EdgeInsets.all(16), // Margem para espaçamento externo
+              padding: EdgeInsets.all(16), // Espaçamento interno
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(230, 255, 255, 255), // Cor de fundo
+                borderRadius: BorderRadius.circular(15), // Bordas arredondadas
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // Sombra sutil
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: Offset(0, 5), // Direção da sombra
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centraliza os textos
+                children: [
+                  Text(
+                    'Vice-campeões',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87, // Cor do texto
+                    ),
+                  ),
+                  SizedBox(height: 10), // Espaçamento entre os textos
+                  Text(
+                    nomesDuplas[dadosTorneio!['viceCampeaoId']] != null
+                        ? "${nomesDuplas[dadosTorneio!['viceCampeaoId']]![0]}\n${nomesDuplas[dadosTorneio!['viceCampeaoId']]![1]}"
+                        : 'Carregando...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueGrey, // Cor mais suave para o texto
+                    ),
+                    textAlign: TextAlign.center, // Centraliza o texto
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 20),
-            Text(
-              'Vice-campeões',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              nomesDuplas[dadosTorneio!['viceCampeaoId']] != null
-                  ? "${nomesDuplas[dadosTorneio!['viceCampeaoId']]![0]} e ${nomesDuplas[dadosTorneio!['viceCampeaoId']]![1]}"
-                  : 'Carregando...',
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             Text(
               'Participantes',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -251,7 +304,7 @@ class _meuTorneio extends State<MeuTorneio> {
                   List<String>? nomes = nomesDuplas[idDupla];
 
                   String nomeDaDupla = nomes != null
-                      ? "${nomes[0]} e ${nomes[1]}"
+                      ? "${nomes[0]}\n${nomes[1]}"
                       : 'Carregando...';
 
                   return Column(
@@ -259,8 +312,8 @@ class _meuTorneio extends State<MeuTorneio> {
                       SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
                           boxShadow: [
                             BoxShadow(
                               color: Colors.grey.withOpacity(0.5),
@@ -271,6 +324,7 @@ class _meuTorneio extends State<MeuTorneio> {
                           ],
                         ),
                         child: ListTile(
+                          leading: Icon(Icons.group_rounded),
                           title: Text(
                             nomeDaDupla,
                             style: TextStyle(

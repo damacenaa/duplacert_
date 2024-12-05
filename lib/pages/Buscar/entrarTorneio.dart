@@ -56,7 +56,8 @@ class _Entrartorneio extends State<Entrartorneio> {
               // Busca dupla ao clicar no botão
               buscarDuplaPorCodigo(codigoDuplaController.text);
             } else
-              Duplas().criarDupla(widget.idTorneio, codigoDuplaController.text);
+              Duplas().criarDupla(
+                  widget.idTorneio, codigoDuplaController.text, context);
           },
           child: Text(
             duplaEncontrada ? 'Entrar no torneio' : 'Buscar',
@@ -99,14 +100,14 @@ class _Entrartorneio extends State<Entrartorneio> {
   }
 }
 
-void abrirConviteDupla(dynamic context, String codTorneio) {
+void abrirConviteDupla(BuildContext context, String codTorneio) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
     ),
-    builder: (context) {
+    builder: (BuildContext bottomSheetContext) {
       return Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,

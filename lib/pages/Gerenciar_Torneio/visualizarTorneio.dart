@@ -38,7 +38,7 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          nomeTorneio.isEmpty ? 'Carregando...' : nomeTorneio,
+          'Informações do Torneio',
           style: const TextStyle(
               fontSize: 25, fontFamily: 'inter', color: Colors.black),
         ),
@@ -141,10 +141,15 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
                           ],
                         ),
                         child: ListTile(
+                          leading: Icon(Icons.group_rounded),
                           title: Text(
                             nomeDaDupla,
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w400),
+                          ),
+                          trailing: Icon(
+                            Icons.remove_circle,
+                            color: const Color.fromARGB(255, 216, 53, 41),
                           ),
                         ),
                       ),

@@ -22,16 +22,93 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
   String userId = FirebaseAuth.instance.currentUser!.uid;
   List<Torneio> torneios = [];
   bool sorteioValidacao = false;
+  String plano = '';
 
   @override
   void initState() {
     super.initState();
     LoadUrlImage();
     carregarTorneios();
+    carregarPlano();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (plano == 'gratis') {
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 60,
+          elevation: 6,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(249, 255, 239, 9),
+                  Color.fromARGB(227, 236, 161, 20),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          title: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Align(
+                alignment: Alignment.center, // Centraliza o texto
+                child: Text(
+                  'Gerenciar Torneios',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontFamily: 'inter',
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight, // Alinha a imagem à direita
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Config(),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(75),
+                      child: imageUrl != null
+                          ? Image.network(
+                              imageUrl!,
+                              fit: BoxFit.cover,
+                              width: 40,
+                              height: 40,
+                            )
+                          : const Icon(
+                              Icons.account_circle,
+                              size: 40,
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: Text(
+              'Para poder criar e gerenciar torneios, adquira o plano "PLUS".',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -172,6 +249,8 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
 
           // Se o torneio foi criado, recarregue a lista
           if (torneioCriado == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Torneio criado com sucesso!')));
             await carregarTorneios(); // Função para recarregar os torneios
           }
         },
@@ -224,5 +303,20 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
     setState(() {
       imageUrl = _imageUrl;
     });
+  }
+
+  Future<void> carregarPlano() async {
+    try {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('user').doc(userId).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          plano = userDoc['plano'];
+        });
+      }
+    } catch (e) {
+      print('Erro ao carregar plano do usuário: $e');
+    }
   }
 }

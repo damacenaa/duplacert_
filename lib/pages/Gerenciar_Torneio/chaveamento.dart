@@ -261,28 +261,90 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Campeões',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Container(
+              margin: EdgeInsets.all(16), // Margem para espaçamento externo
+              padding: EdgeInsets.all(16), // Espaçamento interno
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(223, 255, 255, 255), // Cor de fundo
+                borderRadius: BorderRadius.circular(15), // Bordas arredondadas
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // Sombra sutil
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: Offset(0, 5), // Direção da sombra
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centraliza os textos
+                children: [
+                  Text(
+                    'Campeões',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87, // Cor do texto
+                    ),
+                  ),
+                  SizedBox(height: 10), // Espaçamento entre os textos
+                  Text(
+                    nomesDuplas[dadosTorneio!['campeaoId']] != null
+                        ? "${nomesDuplas[dadosTorneio!['campeaoId']]![0]}\n${nomesDuplas[dadosTorneio!['campeaoId']]![1]}"
+                        : 'Carregando...',
+                    style: TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.amber),
+                    textAlign: TextAlign.center,
+                  )
+                ],
+              ),
             ),
-            Text(
-              nomesDuplas[dadosTorneio!['campeaoId']] != null
-                  ? "${nomesDuplas[dadosTorneio!['campeaoId']]![0]} e ${nomesDuplas[dadosTorneio!['campeaoId']]![1]}"
-                  : 'Carregando...',
-              style: TextStyle(fontSize: 20),
+            Container(
+              margin: EdgeInsets.all(16), // Margem para espaçamento externo
+              padding: EdgeInsets.all(16), // Espaçamento interno
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(230, 255, 255, 255), // Cor de fundo
+                borderRadius: BorderRadius.circular(15), // Bordas arredondadas
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // Sombra sutil
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                    offset: Offset(0, 5), // Direção da sombra
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centraliza os textos
+                children: [
+                  Text(
+                    'Vice-campeões',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87, // Cor do texto
+                    ),
+                  ),
+                  SizedBox(height: 10), // Espaçamento entre os textos
+                  Text(
+                    nomesDuplas[dadosTorneio!['viceCampeaoId']] != null
+                        ? "${nomesDuplas[dadosTorneio!['viceCampeaoId']]![0]}\n${nomesDuplas[dadosTorneio!['viceCampeaoId']]![1]}"
+                        : 'Carregando...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueGrey, // Cor mais suave para o texto
+                    ),
+                    textAlign: TextAlign.center, // Centraliza o texto
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 20),
-            Text(
-              'Vice-campeões',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              nomesDuplas[dadosTorneio!['viceCampeaoId']] != null
-                  ? "${nomesDuplas[dadosTorneio!['viceCampeaoId']]![0]} e ${nomesDuplas[dadosTorneio!['viceCampeaoId']]![1]}"
-                  : 'Carregando...',
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             Text(
               'Participantes',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -292,10 +354,10 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
                 itemCount: nomesDuplas.length,
                 itemBuilder: (context, index) {
                   String idDupla = nomesDuplas.keys.elementAt(index);
-                  String? nomes = nomesDuplas[idDupla] as String?;
+                  List<String>? nomes = nomesDuplas[idDupla];
 
                   String nomeDaDupla = nomes != null
-                      ? "${nomes[0]} e ${nomes[1]}"
+                      ? "${nomes[0]}\n${nomes[1]}"
                       : 'Carregando...';
 
                   return Column(
@@ -303,8 +365,8 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
                       SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
+                          color: Colors.white,
                           boxShadow: [
                             BoxShadow(
                               color: Colors.grey.withOpacity(0.5),
@@ -315,6 +377,7 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
                           ],
                         ),
                         child: ListTile(
+                          leading: Icon(Icons.group_rounded),
                           title: Text(
                             nomeDaDupla,
                             style: TextStyle(
@@ -392,6 +455,10 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
 
     List<String> idsDuplas = [];
     Map<String, String?> resultadosTemp = {};
+
+    if (isFinalizado) {
+      faseAtual = 1;
+    }
 
     try {
       var snapshot = await _firestore
@@ -536,5 +603,6 @@ class _ChaveamentoPageState extends State<ChaveamentoPage> {
         );
       }
     }
+    await carregarDadosIniciais();
   }
 }
