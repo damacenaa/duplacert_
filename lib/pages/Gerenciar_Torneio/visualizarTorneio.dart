@@ -147,9 +147,19 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w400),
                           ),
-                          trailing: Icon(
-                            Icons.remove_circle,
-                            color: const Color.fromARGB(255, 216, 53, 41),
+                          trailing: IconButton(
+                            icon: Icon(
+                              Icons.remove_circle,
+                              color: status == 'Inscrições'
+                                  ? const Color.fromARGB(
+                                      255, 216, 53, 41) // Cor ativa
+                                  : Colors.grey, // Cor desativada
+                            ),
+                            onPressed: status == 'Inscrições'
+                                ? () {
+                                    confirmacaoExclusao(context, idDupla);
+                                  }
+                                : null, // Desativa o botão
                           ),
                         ),
                       ),
@@ -200,6 +210,63 @@ class _ModificiarTorneio extends State<ModificarTorneio> {
         ),
       ),
     );
+  }
+
+  void confirmacaoExclusao(BuildContext context, String idDupla) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Exclusão'),
+          content: const Text('Tem certeza de que deseja excluir esta dupla?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o dialog sem ação
+              },
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Color.fromARGB(198, 158, 158, 158)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Fecha o dialog
+                // Executa a remoção da dupla
+                removerDupla(idDupla);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dupla excluída com sucesso!')),
+                );
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> removerDupla(String idDupla) async {
+    final firestore = FirebaseFirestore.instance;
+
+    try {
+      final torneioRef = firestore.collection('torneios').doc(widget.idTorneio);
+
+      await torneioRef.update({
+        'duplas': FieldValue.arrayRemove([idDupla]),
+      });
+
+      // Exclui o documento correspondente na coleção 'duplas'
+      final duplaRef = firestore.collection('duplas').doc(idDupla);
+      await duplaRef.delete();
+
+      print(
+          'Dupla $idDupla removida com sucesso do torneio ${widget.idTorneio}');
+    } catch (e) {
+      print('Erro ao remover dupla: $e');
+      throw Exception('Falha ao remover dupla.');
+    }
+    await _carregarDadosTorneio();
   }
 
   void habilitarSorteio() {

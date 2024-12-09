@@ -96,6 +96,7 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
               ),
             ],
           ),
+          centerTitle: true,
         ),
         body: Center(
           child: Padding(
@@ -229,6 +230,7 @@ class _GerenciarTorneios extends State<GerenciarTorneios> {
                       ),
                     );
                   },
+                  isAdmin: true,
                 );
               },
             ),

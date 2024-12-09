@@ -21,6 +21,7 @@ class _meuTorneio extends State<MeuTorneio> {
   bool carregandoNomes = true;
   bool isFinalizado = false;
   DocumentSnapshot? dadosTorneio;
+  bool status = true;
 
   @override
   void initState() {
@@ -30,23 +31,43 @@ class _meuTorneio extends State<MeuTorneio> {
 
   @override
   Widget build(BuildContext context) {
-    //Main widget
-    if (isFinalizado) {
-      return telaResultadoFinal();
-    } else {
+    // Condição para status "inscrições"
+    if (!status) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('Fase $faseAtual'),
-          actions: [
-            IconButton(icon: Icon(Icons.arrow_back), onPressed: faseAnterior),
-            IconButton(icon: Icon(Icons.arrow_forward), onPressed: proximaFase),
-          ],
+          title: Text('Chaveamento'),
         ),
-        body: carregandoNomes
-            ? Center(child: CircularProgressIndicator())
-            : confrontoLayout(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Aguarde o Administrador realizar o sorteio das duplas para visualizar o chaveamento.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ),
       );
     }
+
+    // Condição para status "finalizado"
+    if (isFinalizado) {
+      return telaResultadoFinal();
+    }
+
+    // Main widget
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Fase $faseAtual'),
+        actions: [
+          IconButton(icon: Icon(Icons.arrow_back), onPressed: faseAnterior),
+          IconButton(icon: Icon(Icons.arrow_forward), onPressed: proximaFase),
+        ],
+      ),
+      body: carregandoNomes
+          ? Center(child: CircularProgressIndicator())
+          : confrontoLayout(),
+    );
   }
 
   Widget confrontoLayout() {
@@ -387,7 +408,10 @@ class _meuTorneio extends State<MeuTorneio> {
         isFinalizado = docTorneio['status'] == 'finalizado';
         totalFases = chaveamentoSnapshot.data()!['totalFases'];
       });
-    }
+    } else
+      setState(() {
+        status = false;
+      });
 
     // Carrega a fase inicial
     await _carregarDadosDaFase();

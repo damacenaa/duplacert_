@@ -12,14 +12,15 @@ class Torneio {
   final int numParticipantes;
   final String idTorneio;
 
-  Torneio(
-      {required this.nome,
-      required this.categoria,
-      required this.cidade,
-      required this.dataTorneio,
-      required this.estado,
-      required this.numParticipantes,
-      required this.idTorneio});
+  Torneio({
+    required this.nome,
+    required this.categoria,
+    required this.cidade,
+    required this.dataTorneio,
+    required this.estado,
+    required this.numParticipantes,
+    required this.idTorneio,
+  });
 }
 
 class Torneiocard extends StatelessWidget {
@@ -32,18 +33,19 @@ class Torneiocard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onEdit;
   final String idTorneio;
+  final bool isAdmin;
 
-  Torneiocard({
-    required this.nome,
-    required this.categoria,
-    required this.onDelete,
-    required this.onEdit,
-    required this.cidade,
-    required this.estado,
-    required this.dataTorneio,
-    required this.numParticipantes,
-    required this.idTorneio,
-  });
+  Torneiocard(
+      {required this.nome,
+      required this.categoria,
+      required this.onDelete,
+      required this.onEdit,
+      required this.cidade,
+      required this.estado,
+      required this.dataTorneio,
+      required this.numParticipantes,
+      required this.idTorneio,
+      required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +59,9 @@ class Torneiocard extends StatelessWidget {
             width: 350,
             margin: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white, // Cor de fundo
+              color: isAdmin
+                  ? Colors.white
+                  : const Color.fromARGB(223, 238, 189, 41), // Cor de fundo
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -78,91 +82,126 @@ class Torneiocard extends StatelessWidget {
                       Text(
                         nome,
                         style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isAdmin
+                                ? const Color.fromARGB(255, 39, 39, 39)
+                                : const Color.fromARGB(226, 61, 5, 5)),
                       ),
                       const SizedBox(
                         height: 5,
                       ),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.map,
-                            size: 20,
-                            color: Color.fromARGB(216, 0, 0, 0),
-                          ),
+                          Icon(Icons.map,
+                              size: 20,
+                              color: isAdmin
+                                  ? const Color.fromARGB(255, 77, 77, 77)
+                                  : const Color.fromARGB(255, 143, 38, 38)),
                           const SizedBox(
                             width: 5,
                           ),
                           Text(
                             cidade,
-                            style: const TextStyle(
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: isAdmin
+                                    ? const Color.fromARGB(255, 77, 77, 77)
+                                    : const Color.fromARGB(255, 143, 38, 38)),
                           ),
                           Text(
                             ' - $estado',
-                            style: const TextStyle(fontSize: 16),
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: isAdmin
+                                    ? const Color.fromARGB(255, 77, 77, 77)
+                                    : const Color.fromARGB(255, 143, 38, 38)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 2,
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            categoria,
+                            style: TextStyle(
+                                color: isAdmin
+                                    ? const Color.fromARGB(255, 77, 77, 77)
+                                    : const Color.fromARGB(255, 143, 38, 38)),
+                          ),
+                          Text(
+                            ' - $numParticipantes duplas',
+                            style: TextStyle(
+                                color: isAdmin
+                                    ? const Color.fromARGB(255, 77, 77, 77)
+                                    : const Color.fromARGB(255, 143, 38, 38)),
                           ),
                         ],
                       ),
                       const SizedBox(
                         height: 5,
-                      ),
-                      Row(
-                        children: [
-                          Text(categoria),
-                          Text(' - $numParticipantes duplas'),
-                        ],
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
                             '$dataFormatado',
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: isAdmin
+                                    ? const Color.fromARGB(255, 39, 39, 39)
+                                    : const Color.fromARGB(225, 61, 5, 5)),
                           ),
                           SizedBox(width: 160),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: Color.fromARGB(
-                                  202, 204, 31, 31), // Cor do ícone de exclusão
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Text('Confirmação de Exclusão'),
-                                    content: Text(
-                                        'Tem certeza de que deseja excluir este item?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context)
-                                              .pop(); // Fecha o AlertDialog
-                                        },
-                                        child: Text('Cancelar'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          onDelete();
-                                          Navigator.of(context)
-                                              .pop(); // Fecha o AlertDialog
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                                  content: Text(
-                                                      'Torneio excluido com sucesso!')));
-                                        },
-                                        child: Text('Confirmar'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                          isAdmin
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.delete,
+                                    color: Color.fromARGB(
+                                        202, 204, 31, 31), // Cor do ícone ativo
+                                  ),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title:
+                                              Text('Confirmação de Exclusão'),
+                                          content: Text(
+                                              'Tem certeza de que deseja excluir este item?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(); // Fecha o AlertDialog
+                                              },
+                                              child: Text('Cancelar'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                onDelete();
+                                                Navigator.of(context)
+                                                    .pop(); // Fecha o AlertDialog
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                        'Torneio excluído com sucesso!'),
+                                                  ),
+                                                );
+                                              },
+                                              child: Text('Confirmar'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                )
+                              : SizedBox.shrink(),
                         ],
                       ),
                     ],

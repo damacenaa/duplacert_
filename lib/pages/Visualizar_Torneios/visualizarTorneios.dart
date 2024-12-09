@@ -102,6 +102,7 @@ class _VisualizarTorneios extends State<visualizarTorneios> {
                 ),
               ],
             ),
+            centerTitle: true,
           ),
         ),
       ),
@@ -147,6 +148,7 @@ class _VisualizarTorneios extends State<visualizarTorneios> {
                       ),
                     );
                   },
+                  isAdmin: false,
                 );
               },
             ),

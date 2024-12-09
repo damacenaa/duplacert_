@@ -30,13 +30,14 @@ class Torneios {
         final dataTorneio = document['dataTorneio'];
 
         torneioList.add(Torneio(
-            idTorneio: idTorneio,
-            nome: nome,
-            categoria: categoria,
-            cidade: cidade,
-            estado: estado,
-            numParticipantes: participantes,
-            dataTorneio: dataTorneio));
+          idTorneio: idTorneio,
+          nome: nome,
+          categoria: categoria,
+          cidade: cidade,
+          estado: estado,
+          numParticipantes: participantes,
+          dataTorneio: dataTorneio,
+        ));
       }
     } catch (e) {
       print('Erro ao buscar os serviços: $e');

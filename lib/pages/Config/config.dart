@@ -56,6 +56,7 @@ class _Config extends State<Config> {
             fontFamily: 'inter',
           ),
         ),
+        centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -214,13 +215,14 @@ class _Config extends State<Config> {
                     ],
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
                         width: 25,
                       ),
                       Text(
                         'Código do usuário: $codigoUser',
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(fontSize: 17),
                       ),
                       IconButton(
                         icon: Icon(Icons.edit),

@@ -74,16 +74,16 @@ class TorneiocardInsert extends StatelessWidget {
                       Text(
                         nome,
                         style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
+                            fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(
-                        height: 5,
+                        height: 10,
                       ),
                       Row(
                         children: [
                           const Icon(
                             Icons.map,
-                            size: 20,
+                            size: 23,
                             color: Color.fromARGB(216, 0, 0, 0),
                           ),
                           const SizedBox(
@@ -92,12 +92,12 @@ class TorneiocardInsert extends StatelessWidget {
                           Text(
                             cidade,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 19,
                             ),
                           ),
                           Text(
                             ' - $estado',
-                            style: const TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 19),
                           ),
                         ],
                       ),
@@ -106,9 +106,18 @@ class TorneiocardInsert extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          Text(categoria),
-                          Text(' - $numParticipantes duplas'),
+                          Text(
+                            categoria,
+                            style: TextStyle(fontSize: 17),
+                          ),
+                          Text(
+                            ' - $numParticipantes duplas',
+                            style: TextStyle(fontSize: 17),
+                          ),
                         ],
+                      ),
+                      const SizedBox(
+                        height: 5,
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -116,7 +125,7 @@ class TorneiocardInsert extends StatelessWidget {
                           Text(
                             '$dataFormatado',
                             style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                                fontSize: 23, fontWeight: FontWeight.bold),
                           ),
                           SizedBox(width: 160),
                         ],

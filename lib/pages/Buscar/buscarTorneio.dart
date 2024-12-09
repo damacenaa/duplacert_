@@ -104,6 +104,7 @@ class _BuscarTorneioState extends State<buscarTorneio> {
                 ),
               ],
             ),
+            centerTitle: true,
           ),
         ),
       ),
