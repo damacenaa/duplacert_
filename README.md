@@ -8,7 +8,7 @@ Antes de começar, você precisa ter o Flutter e o Dart instalados em seu comput
 
 - Instalar Flutter: Flutter - Get Started
 - Clone o repositório para o seu computador usando Git:
- git clone https://github.com/seu-usuario/nome-do-app.git
+ git clone https://github.com/damacenaa/duplacert_.git
 - Entre no diretório do projeto:
  cd duplacert_
 - O Flutter utiliza um sistema de pacotes para gerenciar as dependências do projeto. Após clonar o repositório, execute o seguinte comando para instalar as dependências::
